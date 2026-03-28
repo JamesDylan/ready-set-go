@@ -8,7 +8,30 @@ interface RoutineEditorProps {
   onBack: () => void;
 }
 
-const ROUTINE_EMOJIS = ['🛏️', '🥣', '🪥', '👕', '🎒', '☀️', '👟', '🍽️', '🛁', '🌙', '📚', '⭐', '🧴', '🧦', '🥤', '🍎', '🐶', '📱', '🎮', '🚿'];
+const ROUTINE_EMOJIS = [
+  // Morning & hygiene
+  '☀️', '🌅', '🛏️', '🚿', '🛁', '🪥', '🧼', '🪒', '💊', '🧻',
+  // Hair
+  '🪮', '💇', '💈', '✂️',
+  // Clothing & accessories
+  '👕', '👗', '👖', '👟', '🥿', '🧦', '🧤', '🧢', '🎒', '👜', '👒',
+  // Food & drink
+  '🍽️', '🥣', '🍳', '🥞', '🥐', '🍎', '🍌', '🥛', '🥤', '🧃', '☕', '🫖',
+  // School & learning
+  '🏫', '📚', '📖', '📝', '✏️', '🖍️', '📐', '🔬',
+  // Evening & bedtime
+  '🌙', '😴', '🌟', '⭐', '💫', '🌛',
+  // Activities & exercise
+  '🏃', '💪', '🧘', '🚲', '⚽', '🏊', '🎨', '🎵', '🎸', '🤸',
+  // Outdoors & nature
+  '🌿', '🌸', '🌈', '🌤️', '☂️', '🧴',
+  // Pets
+  '🐶', '🐱', '🐠', '🐹',
+  // Tech & devices
+  '📱', '💻', '🎮', '📺',
+  // Misc fun
+  '🦷', '👋', '🙌', '🤝', '❤️', '😊', '🎉', '🍀',
+];
 
 const AVATAR_EMOJIS: Record<string, string> = {
   car: '🚗',
@@ -441,10 +464,13 @@ export default function RoutineEditor({ childId, onBack }: RoutineEditorProps) {
                 borderRadius: 14,
                 padding: 10,
                 display: 'grid',
-                gridTemplateColumns: 'repeat(5, 36px)',
+                gridTemplateColumns: 'repeat(6, 38px)',
                 gap: 4,
                 zIndex: 50,
-                boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+                boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
+                maxHeight: 240,
+                overflowY: 'auto',
+                width: 268,
               }}
             >
               {ROUTINE_EMOJIS.map((emoji) => (
@@ -453,8 +479,8 @@ export default function RoutineEditor({ childId, onBack }: RoutineEditorProps) {
                   type="button"
                   onClick={() => { setNewTaskEmoji(emoji); setShowEmojiPicker(false); }}
                   style={{
-                    width: 36,
-                    height: 36,
+                    width: 38,
+                    height: 38,
                     fontSize: 20,
                     background: emoji === newTaskEmoji ? '#F3E8FF' : 'none',
                     border: emoji === newTaskEmoji ? '1px solid #C084FC' : '1px solid transparent',

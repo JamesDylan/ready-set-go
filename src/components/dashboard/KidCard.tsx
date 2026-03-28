@@ -50,8 +50,10 @@ export default function KidCard({ child, mode }: KidCardProps) {
       // Allow un-checking but show a brief hint so it feels intentional
       setUndoHintTaskId(taskId);
       setTimeout(() => setUndoHintTaskId(null), 1000);
+    } else {
+      // Only play the sound when completing a task, not when un-checking
+      playSound('/sounds/item-completed.mp3', 0.7);
     }
-    playSound('/sounds/item-completed.mp3', 0.7);
     toggleTask(child.id, taskId);
   }
 
