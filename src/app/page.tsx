@@ -1,65 +1,193 @@
-import Image from "next/image";
+'use client';
+import { useState, useEffect } from 'react';
+import ModeToggle from '@/components/dashboard/ModeToggle';
+import KidCard from '@/components/dashboard/KidCard';
+import CountdownBar from '@/components/dashboard/CountdownBar';
+import PINGate from '@/components/parent/PINGate';
+import ParentPanel from '@/components/parent/ParentPanel';
+import { useAppStore } from '@/store/useAppStore';
+
+function formatTime(date: Date): string {
+  const h = String(date.getHours()).padStart(2, '0');
+  const m = String(date.getMinutes()).padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+function timeToMinutes(hhmm: string): number {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function minutesUntil(targetHHMM: string, nowMinutes: number): number {
+  return timeToMinutes(targetHHMM) - nowMinutes;
+}
 
 export default function Home() {
+  const children = useAppStore((s) => s.children);
+  const mode = useAppStore((s) => s.mode);
+  const setMode = useAppStore((s) => s.setMode);
+  const resetDay = useAppStore((s) => s.resetDay);
+  const checkAndResetIfNewDay = useAppStore((s) => s.checkAndResetIfNewDay);
+  const parentUnlocked = useAppStore((s) => s.parentUnlocked);
+  const unlockParent = useAppStore((s) => s.unlockParent);
+  const lockParent = useAppStore((s) => s.lockParent);
+
+  const [now, setNow] = useState<Date>(() => new Date());
+  const [showPINGate, setShowPINGate] = useState(false);
+
+  // Live clock: tick every 60 seconds
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Auto mode detection on first load only
+  useEffect(() => {
+    const hour = new Date().getHours();
+    const detectedMode = hour < 14 ? 'morning' : 'evening';
+    setMode(detectedMode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Daily auto-reset: clear tasks if it's a new day
+  useEffect(() => {
+    checkAndResetIfNewDay();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Compute countdown bar props
+  let countdownTarget: string | null = null;
+  let countdownLabel = '';
+  let minutesRemaining = 0;
+
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+  if (mode === 'morning') {
+    countdownTarget = '08:45';
+    countdownLabel = 'School ready by';
+    minutesRemaining = minutesUntil('08:45', nowMinutes);
+  } else {
+    // Find the child with the earliest bedtime that hasn't been passed yet
+    const upcoming = children
+      .map((child) => ({
+        name: child.name,
+        target: child.eveningTarget,
+        minsLeft: minutesUntil(child.eveningTarget, nowMinutes),
+      }))
+      .filter((c) => c.minsLeft > 0)
+      .sort((a, b) => a.minsLeft - b.minsLeft);
+
+    if (upcoming.length > 0) {
+      const next = upcoming[0];
+      countdownTarget = next.target;
+      countdownLabel = `${next.name}'s bedtime`;
+      minutesRemaining = next.minsLeft;
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div
+      className="h-screen overflow-hidden flex flex-col"
+      data-mode={mode}
+      style={{ backgroundColor: 'var(--color-bg)' }}
+    >
+      {/* Header bar */}
+      <header
+        className="flex flex-row items-center justify-between px-6"
+        style={{
+          height: 72,
+          backgroundColor: 'var(--color-surface)',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+          flexShrink: 0,
+          position: 'relative',
+        }}
+      >
+        {/* Left: Mode toggle */}
+        <ModeToggle currentMode={mode} onToggle={setMode} />
+
+        {/* Centre: Clock (live) */}
+        <span
+          style={{
+            fontFamily: 'var(--font-fredoka-one), system-ui',
+            fontSize: 32,
+            color: 'var(--color-text)',
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
+          }}
+        >
+          {formatTime(now)}
+        </span>
+
+        {/* Right: dev Reset + Parent lock */}
+        <div className="flex items-center gap-2">
+          {process.env.NODE_ENV === 'development' && (
+            <button
+              type="button"
+              onClick={resetDay}
+              style={{
+                fontSize: 12,
+                fontFamily: 'var(--font-nunito), system-ui',
+                fontWeight: 700,
+                padding: '4px 10px',
+                borderRadius: 8,
+                border: '1px solid #D1D5DB',
+                backgroundColor: '#F9FAFB',
+                color: '#6B7280',
+                cursor: 'pointer',
+              }}
+            >
+              Reset day
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowPINGate(true)}
+            className="flex items-center justify-center rounded-full"
+            style={{
+              width: 56,
+              height: 56,
+              backgroundColor: 'var(--color-brand-light)',
+              border: 'none',
+              fontSize: 24,
+              cursor: 'pointer',
+            }}
+            aria-label="Parent settings"
+          >
+            {parentUnlocked ? '🔓' : '🔒'}
+          </button>
+        </div>
+      </header>
+
+      {/* Content area: 3 kid columns */}
+      <div className="flex-1 flex flex-row gap-4 px-4 py-3 overflow-hidden">
+        {children.map((child) => (
+          <KidCard key={child.id} child={child} mode={mode} />
+        ))}
+      </div>
+
+      {/* Countdown bar */}
+      {countdownTarget && (
+        <CountdownBar
+          targetTime={countdownTarget}
+          label={countdownLabel}
+          minutesRemaining={minutesRemaining}
+          mode={mode}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      )}
+
+      {/* PIN gate: show when button clicked and not yet unlocked */}
+      {showPINGate && !parentUnlocked && (
+        <PINGate
+          onAttempt={(pin) => unlockParent(pin)}
+          onSuccess={() => setShowPINGate(false)}
+          onCancel={() => setShowPINGate(false)}
+        />
+      )}
+
+      {/* Parent panel: show when unlocked */}
+      {parentUnlocked && (
+        <ParentPanel onClose={() => lockParent()} />
+      )}
     </div>
   );
 }

@@ -1,0 +1,24 @@
+{
+  "name": "Unicorn Sparkles",
+  "short_name": "Routines",
+  "description": "Morning and bedtime routines for kids",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF5FF",
+  "theme_color": "#7B2FBE",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

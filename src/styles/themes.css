@@ -1,0 +1,35 @@
+:root {
+  /* Global brand */
+  --color-brand: #7B2FBE;
+  --color-brand-light: #C084FC;
+  --color-gold: #F59E0B;
+  --color-bg: #FAF5FF;
+  --color-surface: #FFFFFF;
+  --color-text: #3B0764;
+  --color-success: #10B981;
+
+  /* Griff — car — blue */
+  --color-griff: #1E40AF;
+  --color-griff-light: #93C5FD;
+  --color-griff-glow: #DBEAFE;
+
+  /* Harriet — unicorn — pink */
+  --color-harriet: #BE185D;
+  --color-harriet-light: #F9A8D4;
+  --color-harriet-glow: #FCE7F3;
+
+  /* Evie — axolotl — green */
+  --color-evie: #065F46;
+  --color-evie-light: #6EE7B7;
+  --color-evie-glow: #D1FAE5;
+  --color-evie-flame: #F97316;
+}
+
+/* Evening dark mode — applied via data-mode="evening" on root div */
+[data-mode='evening'] {
+  --color-bg: #0F0A1E;
+  --color-surface: #1C1333;
+  --color-text: #E9D5FF;
+  --color-brand: #A855F7;
+  --color-brand-light: #7C3AED;
+}
