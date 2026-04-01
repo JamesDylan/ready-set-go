@@ -5,6 +5,7 @@ import KidCard from '@/components/dashboard/KidCard';
 import CountdownBar from '@/components/dashboard/CountdownBar';
 import PINGate from '@/components/parent/PINGate';
 import ParentPanel from '@/components/parent/ParentPanel';
+import AvatarPickerModal from '@/components/dashboard/AvatarPickerModal';
 import { useAppStore } from '@/store/useAppStore';
 
 function formatTime(date: Date): string {
@@ -31,6 +32,9 @@ export default function Home() {
   const parentUnlocked = useAppStore((s) => s.parentUnlocked);
   const unlockParent = useAppStore((s) => s.unlockParent);
   const lockParent = useAppStore((s) => s.lockParent);
+  const confirmAvatar = useAppStore((s) => s.confirmAvatar);
+
+  const pendingAvatarChild = children.find((c) => c.avatarConfirmed === false) ?? null;
 
   const [now, setNow] = useState<Date>(() => new Date());
   const [showPINGate, setShowPINGate] = useState(false);
@@ -62,9 +66,9 @@ export default function Home() {
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
   if (mode === 'morning') {
-    countdownTarget = '08:45';
+    countdownTarget = children[0]?.morningTarget ?? '08:45';
     countdownLabel = 'School ready by';
-    minutesRemaining = minutesUntil('08:45', nowMinutes);
+    minutesRemaining = minutesUntil(countdownTarget, nowMinutes);
   } else {
     // Find the child with the earliest bedtime that hasn't been passed yet
     const upcoming = children
@@ -105,7 +109,8 @@ export default function Home() {
         <ModeToggle currentMode={mode} onToggle={setMode} />
 
         {/* Centre: Clock (live) */}
-        <span
+        <time
+          dateTime={now.toISOString()}
           style={{
             fontFamily: 'var(--font-fredoka-one), system-ui',
             fontSize: 32,
@@ -116,7 +121,7 @@ export default function Home() {
           }}
         >
           {formatTime(now)}
-        </span>
+        </time>
 
         {/* Right: dev Reset + Parent lock */}
         <div className="flex items-center gap-2">
@@ -168,10 +173,17 @@ export default function Home() {
       {/* Countdown bar */}
       {countdownTarget && (
         <CountdownBar
-          targetTime={countdownTarget}
           label={countdownLabel}
           minutesRemaining={minutesRemaining}
           mode={mode}
+        />
+      )}
+
+      {/* Avatar picker: shown once per child when avatarConfirmed === false */}
+      {pendingAvatarChild && (
+        <AvatarPickerModal
+          child={pendingAvatarChild}
+          onConfirm={(avatarType) => confirmAvatar(pendingAvatarChild.id, avatarType)}
         />
       )}
 

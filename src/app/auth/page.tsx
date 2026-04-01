@@ -6,6 +6,33 @@ import { createClient } from '@/lib/supabase/client';
 
 type Tab = 'signin' | 'signup';
 
+/** Translate raw Supabase/network errors into something a parent can understand. */
+function getFriendlyError(msg: string): string {
+  const m = msg.toLowerCase();
+  if (m.includes('row-level security') || m.includes('violates row')) {
+    return 'Your account was created — please sign in to continue.';
+  }
+  if (m.includes('invalid login credentials') || m.includes('invalid_credentials') || m.includes('invalid credentials')) {
+    return 'Incorrect email or password. Please try again.';
+  }
+  if (m.includes('already registered') || m.includes('already exists') || m.includes('user already')) {
+    return 'An account with this email already exists — try signing in instead.';
+  }
+  if (m.includes('password should be') || m.includes('password must be') || m.includes('at least 6')) {
+    return 'Password must be at least 6 characters long.';
+  }
+  if (m.includes('email not confirmed') || m.includes('not confirmed')) {
+    return 'Please check your email and click the confirmation link, then sign in.';
+  }
+  if (m.includes('rate limit') || m.includes('too many')) {
+    return 'Too many attempts — please wait a moment and try again.';
+  }
+  if (m.includes('network') || m.includes('fetch')) {
+    return 'Connection problem — please check your internet and try again.';
+  }
+  return 'Something went wrong. Please try again.';
+}
+
 export default function AuthPage() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('signin');
@@ -13,17 +40,25 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [familyName, setFamilyName] = useState('');
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
+
+  function switchTab(t: Tab) {
+    setTab(t);
+    setError('');
+    setInfo('');
+  }
 
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    setInfo('');
     setLoading(true);
     const supabase = createClient();
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (signInError) {
-      setError(signInError.message);
+      setError(getFriendlyError(signInError.message));
     } else {
       router.push('/');
     }
@@ -32,28 +67,43 @@ export default function AuthPage() {
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    setInfo('');
     if (!familyName.trim()) {
       setError('Please enter a family name.');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
       return;
     }
     setLoading(true);
     const supabase = createClient();
     const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+
     if (signUpError) {
       setLoading(false);
-      setError(signUpError.message);
+      setError(getFriendlyError(signUpError.message));
       return;
     }
+
+    // Email confirmation is required — session not yet available
+    if (!data.session) {
+      setLoading(false);
+      setInfo('Almost there! Check your email for a confirmation link, then come back to sign in.');
+      return;
+    }
+
+    // Session available — insert the family row
     if (data.user) {
       const { error: familyError } = await supabase
         .from('families')
         .insert({ name: familyName.trim(), owner_id: data.user.id });
       if (familyError) {
-        setLoading(false);
-        setError(familyError.message);
-        return;
+        // Non-fatal: family can be created during onboarding instead
+        console.error('Family insert failed:', familyError.message);
       }
     }
+
     setLoading(false);
     router.push('/onboarding');
   }
@@ -110,7 +160,7 @@ export default function AuthPage() {
             <button
               key={t}
               type="button"
-              onClick={() => { setTab(t); setError(''); }}
+              onClick={() => switchTab(t)}
               style={{
                 flex: 1,
                 padding: '0.5rem',
@@ -130,6 +180,12 @@ export default function AuthPage() {
           ))}
         </div>
 
+        {/* Context note */}
+        {tab === 'signin' && (
+          <p style={{ fontSize: '0.85rem', color: '#6B7280', marginBottom: '1rem', lineHeight: 1.5 }}>
+            New here? Switch to <strong>Create account</strong> to set up your family&apos;s routines.
+          </p>
+        )}
         {/* Form */}
         <form onSubmit={tab === 'signin' ? handleSignIn : handleSignUp}>
           {tab === 'signup' && (
@@ -175,21 +231,45 @@ export default function AuthPage() {
               minLength={6}
               style={inputStyle}
             />
+            {tab === 'signup' && (
+              <p style={{ fontSize: '0.78rem', color: '#9CA3AF', marginTop: '0.3rem' }}>
+                At least 6 characters
+              </p>
+            )}
           </div>
 
           {error && (
-            <p
+            <div
+              role="alert"
               style={{
-                color: '#c0392b',
-                background: '#fdf0ef',
+                color: '#B91C1C',
+                background: '#FEE2E2',
                 borderRadius: '0.5rem',
                 padding: '0.625rem 0.875rem',
                 fontSize: '0.9rem',
                 marginBottom: '1rem',
+                lineHeight: 1.4,
               }}
             >
               {error}
-            </p>
+            </div>
+          )}
+
+          {info && (
+            <div
+              role="status"
+              style={{
+                color: '#065F46',
+                background: '#D1FAE5',
+                borderRadius: '0.5rem',
+                padding: '0.625rem 0.875rem',
+                fontSize: '0.9rem',
+                marginBottom: '1rem',
+                lineHeight: 1.4,
+              }}
+            >
+              {info}
+            </div>
           )}
 
           <button
@@ -208,7 +288,7 @@ export default function AuthPage() {
               transition: 'background 0.2s',
             }}
           >
-            {loading ? 'Please wait...' : tab === 'signin' ? 'Sign in' : 'Create account'}
+            {loading ? 'Please wait…' : tab === 'signin' ? 'Sign in' : 'Create account'}
           </button>
         </form>
       </div>

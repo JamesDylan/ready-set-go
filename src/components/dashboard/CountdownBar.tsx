@@ -1,7 +1,6 @@
 import type { RoutineMode } from '@/types';
 
 interface CountdownBarProps {
-  targetTime: string;
   label: string;
   minutesRemaining: number;
   mode: RoutineMode;
@@ -38,6 +37,9 @@ export default function CountdownBar({
 
   return (
     <div
+      role="status"
+      aria-live="polite"
+      aria-label={`${label}: ${timeLabel}`}
       style={{
         padding: '10px 16px 12px',
         background: 'var(--color-surface)',

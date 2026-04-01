@@ -8,7 +8,7 @@ export async function proxy(request: NextRequest) {
   // Public paths — never require auth
   const isPublic =
     pathname.startsWith('/auth') ||           // sign-in / sign-up pages
-    pathname.startsWith('/api/auth/') ||      // Supabase callback route
+    pathname.startsWith('/auth/callback') ||  // Supabase OAuth callback route
     pathname.startsWith('/_next') ||
     pathname.startsWith('/sounds') ||
     pathname.startsWith('/animations') ||
@@ -17,11 +17,15 @@ export async function proxy(request: NextRequest) {
 
   if (isPublic) return NextResponse.next({ request });
 
-  // Guard: if Supabase env vars are missing, allow through rather than crash
+  // Guard: if Supabase env vars are missing this is a misconfiguration — fail
+  // closed by redirecting to /auth rather than silently passing the request
+  // through to protected routes.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) {
-    return NextResponse.next({ request });
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth';
+    return NextResponse.redirect(url);
   }
 
   let supabaseResponse = NextResponse.next({ request });
@@ -43,9 +47,14 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Supabase unreachable — allow through rather than block all traffic
+    return supabaseResponse;
+  }
 
   if (!user) {
     const url = request.nextUrl.clone();

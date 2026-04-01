@@ -23,6 +23,21 @@
   --color-evie-light: #6EE7B7;
   --color-evie-glow: #D1FAE5;
   --color-evie-flame: #F97316;
+
+  /* Rocket — orange */
+  --color-rocket: #EA580C;
+  --color-rocket-light: #FDBA74;
+  --color-rocket-glow: #FFF7ED;
+
+  /* Dragon — red */
+  --color-dragon: #B91C1C;
+  --color-dragon-light: #FCA5A5;
+  --color-dragon-glow: #FEE2E2;
+
+  /* Cat — teal */
+  --color-cat: #0D9488;
+  --color-cat-light: #99F6E4;
+  --color-cat-glow: #CCFBF1;
 }
 
 /* Evening dark mode — applied via data-mode="evening" on root div */

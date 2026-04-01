@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAuth } from '@/hooks/useAuth';
 import RoutineEditor from './RoutineEditor';
+import { createClient } from '@/lib/supabase/client';
 
 interface ParentPanelProps {
   onClose: () => void;
@@ -20,7 +21,15 @@ export default function ParentPanel({ onClose }: ParentPanelProps) {
   const children = useAppStore((s) => s.children);
   const [resetConfirm, setResetConfirm] = useState(false);
   const [editingChildId, setEditingChildId] = useState<string | null>(null);
+  const [signingOut, setSigningOut] = useState(false);
   const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = '/auth';
+  };
 
   const handleResetDay = () => {
     resetDay();
@@ -274,23 +283,29 @@ export default function ParentPanel({ onClose }: ParentPanelProps) {
               🔒 Lock Parent Area
             </button>
 
+            {/* Separator */}
+            <div style={{ height: 1, backgroundColor: '#FEE2E2', marginTop: 20, marginBottom: 16 }} />
+
             {/* Sign out */}
             <button
               type="button"
-              onClick={() => signOut()}
+              onClick={handleSignOut}
+              disabled={signingOut}
               style={{
-                marginTop: 12,
-                background: 'none',
-                border: 'none',
                 fontFamily: 'var(--font-nunito), system-ui',
-                fontSize: 13,
-                color: '#9CA3AF',
-                cursor: 'pointer',
-                padding: 0,
-                textAlign: 'center',
+                fontSize: 15,
+                fontWeight: 700,
+                width: '100%',
+                padding: '12px 24px',
+                borderRadius: 12,
+                border: '1px solid #FCA5A5',
+                backgroundColor: 'transparent',
+                color: '#B91C1C',
+                cursor: signingOut ? 'not-allowed' : 'pointer',
+                opacity: signingOut ? 0.7 : 1,
               }}
             >
-              Sign out
+              {signingOut ? 'Signing out…' : 'Sign out'}
             </button>
           </>
         )}

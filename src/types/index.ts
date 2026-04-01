@@ -1,4 +1,4 @@
-export type AvatarType = 'car' | 'unicorn' | 'axolotl';
+export type AvatarType = 'car' | 'unicorn' | 'axolotl' | 'rocket' | 'dragon' | 'cat';
 export type RoutineMode = 'morning' | 'evening';
 
 export interface Task {
@@ -20,4 +20,5 @@ export interface Child {
   morningTarget: string;
   eveningTarget: string;
   streak: number;
+  avatarConfirmed?: boolean;  // undefined = treat as confirmed (backward compat)
 }

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface PINGateProps {
   onAttempt: (pin: string) => boolean;
@@ -36,9 +36,12 @@ export default function PINGate({ onAttempt, onSuccess, onCancel }: PINGateProps
     return () => clearInterval(id);
   }, [lockedOut]);
 
+  const shakeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (shakeTimerRef.current) clearTimeout(shakeTimerRef.current); }, []);
+
   const triggerWrong = useCallback(() => {
     setShaking(true);
-    setTimeout(() => {
+    shakeTimerRef.current = setTimeout(() => {
       setShaking(false);
       setDigits([]);
     }, 400);

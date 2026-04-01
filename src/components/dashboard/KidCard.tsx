@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import type { Child, RoutineMode } from '@/types';
 import CharacterAvatar from '@/components/shared/CharacterAvatar';
 import ProgressRing from '@/components/routine/ProgressRing';
@@ -12,7 +12,7 @@ interface KidCardProps {
   mode: RoutineMode;
 }
 
-export default function KidCard({ child, mode }: KidCardProps) {
+function KidCard({ child, mode }: KidCardProps) {
   const toggleTask = useAppStore((s) => s.toggleTask);
   const [showCelebration, setShowCelebration] = useState(false);
   const [completedThisSession, setCompletedThisSession] = useState(false);
@@ -49,7 +49,8 @@ export default function KidCard({ child, mode }: KidCardProps) {
     if (wasComplete) {
       // Allow un-checking but show a brief hint so it feels intentional
       setUndoHintTaskId(taskId);
-      setTimeout(() => setUndoHintTaskId(null), 1000);
+      const id = setTimeout(() => setUndoHintTaskId(null), 1000);
+      return () => clearTimeout(id);
     } else {
       // Only play the sound when completing a task, not when un-checking
       playSound('/sounds/item-completed.mp3', 0.7);
@@ -59,7 +60,7 @@ export default function KidCard({ child, mode }: KidCardProps) {
 
   return (
     <>
-    {showCelebration && (
+      {showCelebration && (
       <CelebrationOverlay
         child={child}
         taskCount={total}
@@ -258,3 +259,5 @@ export default function KidCard({ child, mode }: KidCardProps) {
     </>
   );
 }
+
+export default memo(KidCard);

@@ -2,7 +2,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { getSeedData, getEmptyDayData } from '@/lib/seedData';
-import type { Child, RoutineMode } from '@/types';
+import type { AvatarType, Child, RoutineMode } from '@/types';
+import { AVATAR_COLOUR_MAP } from '@/lib/avatarUtils';
 
 interface AppStore {
   children: Child[];
@@ -21,6 +22,7 @@ interface AppStore {
   reorderTasks: (childId: string, mode: RoutineMode, taskIds: string[]) => void;
   updateTargetTime: (childId: string, mode: RoutineMode, time: string) => void;
   updateTaskLabel: (childId: string, mode: RoutineMode, taskId: string, newLabel: string) => void;
+  confirmAvatar: (childId: string, avatarType: AvatarType) => void;
 }
 
 export const useAppStore = create<AppStore>()(
@@ -125,6 +127,19 @@ export const useAppStore = create<AppStore>()(
               ? { ...child, morningTasks: updated }
               : { ...child, eveningTasks: updated };
           }),
+        })),
+      confirmAvatar: (childId, avatarType) =>
+        set((state) => ({
+          children: state.children.map((child) =>
+            child.id !== childId
+              ? child
+              : {
+                  ...child,
+                  avatarType,
+                  colour: AVATAR_COLOUR_MAP[avatarType],
+                  avatarConfirmed: true,
+                }
+          ),
         })),
       resetDay: () => set({ children: getEmptyDayData() }),
       parentUnlocked: false,
