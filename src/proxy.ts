@@ -17,6 +17,12 @@ export async function proxy(request: NextRequest) {
 
   if (isPublic) return NextResponse.next({ request });
 
+  // Dev-only auth bypass — set BYPASS_AUTH=true in .env.local to skip Supabase
+  // checks. Never active in production (NODE_ENV is always 'production' on Vercel).
+  if (process.env.NODE_ENV === 'development' && process.env.BYPASS_AUTH === 'true') {
+    return NextResponse.next({ request });
+  }
+
   // Guard: if Supabase env vars are missing this is a misconfiguration — fail
   // closed by redirecting to /auth rather than silently passing the request
   // through to protected routes.

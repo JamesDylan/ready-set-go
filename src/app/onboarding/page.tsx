@@ -137,16 +137,22 @@ export default function OnboardingPage() {
   return (
     <div
       style={{
-        minHeight: '100dvh',
+        height: '100dvh',
         backgroundColor: 'var(--color-bg)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
         overflowY: 'auto',
-        padding: '24px 16px',
+        WebkitOverflowScrolling: 'touch',
       }}
     >
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          minHeight: '100%',
+          padding: '24px 16px 48px',
+        }}
+      >
       <div
         style={{
           width: '100%',
@@ -154,7 +160,7 @@ export default function OnboardingPage() {
           backgroundColor: 'var(--color-surface)',
           borderRadius: 24,
           boxShadow: '0 4px 32px rgba(123,47,190,0.12)',
-          padding: '36px 32px',
+          padding: 'clamp(20px, 4vw, 36px) clamp(16px, 4vw, 32px)',
         }}
       >
         {step === 1 ? (
@@ -193,6 +199,7 @@ export default function OnboardingPage() {
             onBack={() => setStep(3)}
           />
         )}
+      </div>
       </div>
     </div>
   );

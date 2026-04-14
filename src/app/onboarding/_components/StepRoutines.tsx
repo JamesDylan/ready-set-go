@@ -153,8 +153,8 @@ export function StepRoutines({
         </p>
       )}
 
-      {/* Task lists side by side */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
+      {/* Task lists — stacked on mobile, side by side on sm+ */}
+      <div className="flex flex-col sm:flex-row" style={{ gap: 12, marginBottom: 24 }}>
         {/* Morning */}
         <div
           style={{

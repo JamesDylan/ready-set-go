@@ -47,10 +47,9 @@ function KidCard({ child, mode }: KidCardProps) {
 
   function handleTaskTap(taskId: string, wasComplete: boolean) {
     if (wasComplete) {
-      // Allow un-checking but show a brief hint so it feels intentional
+      // Show a brief hint so un-checking feels intentional
       setUndoHintTaskId(taskId);
-      const id = setTimeout(() => setUndoHintTaskId(null), 1000);
-      return () => clearTimeout(id);
+      setTimeout(() => setUndoHintTaskId(null), 1000);
     } else {
       // Only play the sound when completing a task, not when un-checking
       playSound('/sounds/item-completed.mp3', 0.7);

@@ -52,27 +52,31 @@ export default function PINGate({ onAttempt, onSuccess, onCancel }: PINGateProps
       if (lockedOut) return;
       setDigits((prev) => {
         if (prev.length >= PIN_LENGTH) return prev;
-        const next = [...prev, d];
-        if (next.length === PIN_LENGTH) {
-          const pin = next.join('');
-          const correct = onAttempt(pin);
-          if (correct) {
-            onSuccess();
-            return next;
-          }
-          const newAttempts = attempts + 1;
-          setAttempts(newAttempts);
-          if (newAttempts >= MAX_ATTEMPTS) {
-            setLockedOut(true);
-          }
-          triggerWrong();
-          return prev;
-        }
-        return next;
+        return [...prev, d];
       });
     },
-    [lockedOut, attempts, onAttempt, onSuccess, triggerWrong]
+    [lockedOut]
   );
+
+  // Watch for a complete PIN and validate it outside of the state updater
+  const digitsRef = useRef(digits);
+  digitsRef.current = digits;
+  useEffect(() => {
+    if (digits.length !== PIN_LENGTH) return;
+    const pin = digits.join('');
+    const correct = onAttempt(pin);
+    if (correct) {
+      onSuccess();
+      return;
+    }
+    const newAttempts = attempts + 1;
+    setAttempts(newAttempts);
+    if (newAttempts >= MAX_ATTEMPTS) {
+      setLockedOut(true);
+    }
+    triggerWrong();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [digits]);
 
   const handleBackspace = useCallback(() => {
     if (lockedOut) return;

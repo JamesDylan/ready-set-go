@@ -60,6 +60,37 @@ Always check for `[AGENT_BOOSTER_AVAILABLE]` before spawning. Emoji/icon list ad
 - `patterns` — Supabase/Next.js conventions and gotchas
 - `alerts` — active tech-debt items to fix
 
+## Quality Gate (mandatory after every code change)
+
+Run these three commands in parallel after any edit. All must pass before marking a task done:
+
+```bash
+npm run typecheck   # tsc --noEmit — catches type errors
+npm test            # vitest run  — unit tests in src/tests/
+npm run lint        # eslint
+```
+
+**When to run each:**
+- `typecheck` — after any change to types, store, or component props
+- `test` — after any change to store logic, utilities, or anything with a test file
+- `lint` — after any file edit
+
+**Tests live in `src/tests/`** — one `.test.ts` per logical area:
+- `store.test.ts` — Zustand store actions (toggleTask, resetDay, etc.)
+- Add test files for new utilities and business logic as they are written
+
+**tester agent responsibilities (Wave 3):**
+1. Run `npm test` — fix any failures before proceeding
+2. Run `npm run typecheck` — fix type errors
+3. Add regression tests for any bug that was fixed
+4. Add smoke tests for any new store action or utility
+
+## Dev Preview
+
+The dev server bypasses Supabase auth when `BYPASS_AUTH=true` is in `.env.local`.
+This lets agents use the preview tools to verify UI changes without needing a session.
+`.env.local` is gitignored — this flag never reaches production.
+
 ## Key Conventions
 
 - Files must stay under 500 lines — split into sub-components if needed

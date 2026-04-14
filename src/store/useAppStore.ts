@@ -22,6 +22,7 @@ interface AppStore {
   reorderTasks: (childId: string, mode: RoutineMode, taskIds: string[]) => void;
   updateTargetTime: (childId: string, mode: RoutineMode, time: string) => void;
   updateTaskLabel: (childId: string, mode: RoutineMode, taskId: string, newLabel: string) => void;
+  updateTaskIcon: (childId: string, mode: RoutineMode, taskId: string, newIcon: string) => void;
   confirmAvatar: (childId: string, avatarType: AvatarType) => void;
 }
 
@@ -123,6 +124,17 @@ export const useAppStore = create<AppStore>()(
             if (child.id !== childId) return child;
             const tasks = mode === 'morning' ? child.morningTasks : child.eveningTasks;
             const updated = tasks.map((t) => t.id === taskId ? { ...t, label: newLabel } : t);
+            return mode === 'morning'
+              ? { ...child, morningTasks: updated }
+              : { ...child, eveningTasks: updated };
+          }),
+        })),
+      updateTaskIcon: (childId, mode, taskId, newIcon) =>
+        set((state) => ({
+          children: state.children.map((child) => {
+            if (child.id !== childId) return child;
+            const tasks = mode === 'morning' ? child.morningTasks : child.eveningTasks;
+            const updated = tasks.map((t) => t.id === taskId ? { ...t, icon: newIcon } : t);
             return mode === 'morning'
               ? { ...child, morningTasks: updated }
               : { ...child, eveningTasks: updated };

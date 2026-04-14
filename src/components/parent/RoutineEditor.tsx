@@ -6,6 +6,7 @@ import type { RoutineMode } from '@/types';
 interface RoutineEditorProps {
   childId: string;
   onBack: () => void;
+  hideHeader?: boolean;
 }
 
 const ROUTINE_EMOJIS = [
@@ -39,13 +40,14 @@ const AVATAR_EMOJIS: Record<string, string> = {
   axolotl: '🦎',
 };
 
-export default function RoutineEditor({ childId, onBack }: RoutineEditorProps) {
+export default function RoutineEditor({ childId, onBack, hideHeader = false }: RoutineEditorProps) {
   const children = useAppStore((s) => s.children);
   const addTask = useAppStore((s) => s.addTask);
   const removeTask = useAppStore((s) => s.removeTask);
   const reorderTasks = useAppStore((s) => s.reorderTasks);
   const updateTargetTime = useAppStore((s) => s.updateTargetTime);
   const updateTaskLabel = useAppStore((s) => s.updateTaskLabel);
+  const updateTaskIcon = useAppStore((s) => s.updateTaskIcon);
 
   const child = children.find((c) => c.id === childId);
 
@@ -58,8 +60,10 @@ export default function RoutineEditor({ childId, onBack }: RoutineEditorProps) {
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
   const [editingLabelValue, setEditingLabelValue] = useState('');
+  const [editingIconTaskId, setEditingIconTaskId] = useState<string | null>(null);
 
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const iconPickerRef = useRef<HTMLDivElement>(null);
 
   if (!child) return null;
 
@@ -128,7 +132,7 @@ export default function RoutineEditor({ childId, onBack }: RoutineEditorProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-      {/* Header row */}
+      {/* Header row — hidden when ParentPanel renders its own header */}
       <div
         style={{
           display: 'flex',
@@ -137,63 +141,70 @@ export default function RoutineEditor({ childId, onBack }: RoutineEditorProps) {
           marginBottom: 20,
         }}
       >
-        <button
-          type="button"
-          onClick={onBack}
-          style={{
-            background: 'none',
-            border: 'none',
-            fontSize: 20,
-            cursor: 'pointer',
-            color: '#6B7280',
-            padding: '4px 8px',
-            borderRadius: 8,
-            lineHeight: 1,
-          }}
-          aria-label="Back"
-        >
-          ←
-        </button>
-        <span style={{ fontSize: 24 }}>{avatarEmoji}</span>
-        <span
-          style={{
-            fontFamily: 'var(--font-fredoka-one), system-ui',
-            fontSize: 22,
-            color: '#3B0764',
-            flex: 1,
-          }}
-        >
-          {child.name}
-        </span>
-        {/* Morning / Evening toggle */}
-        <div
-          style={{
-            display: 'flex',
-            borderRadius: 10,
-            overflow: 'hidden',
-            border: '1px solid #E5E7EB',
-          }}
-        >
-          {(['morning', 'evening'] as RoutineMode[]).map((m) => (
+        {!hideHeader && (
+          <>
             <button
-              key={m}
               type="button"
-              onClick={() => setSelectedMode(m)}
+              onClick={onBack}
               style={{
-                fontFamily: 'var(--font-nunito), system-ui',
-                fontSize: 13,
-                fontWeight: 700,
-                padding: '6px 14px',
+                background: 'none',
                 border: 'none',
+                fontSize: 20,
                 cursor: 'pointer',
-                backgroundColor: selectedMode === m ? '#7B2FBE' : '#F9FAFB',
-                color: selectedMode === m ? '#FFFFFF' : '#6B7280',
-                transition: 'background-color 0.15s',
+                color: '#6B7280',
+                padding: '4px 8px',
+                borderRadius: 8,
+                lineHeight: 1,
+              }}
+              aria-label="Back"
+            >
+              ←
+            </button>
+            <span style={{ fontSize: 24 }}>{avatarEmoji}</span>
+            <span
+              style={{
+                fontFamily: 'var(--font-fredoka-one), system-ui',
+                fontSize: 22,
+                color: '#3B0764',
+                flex: 1,
               }}
             >
-              {m === 'morning' ? '☀️ Morning' : '🌙 Evening'}
-            </button>
-          ))}
+              {child.name}
+            </span>
+          </>
+        )}
+        {/* Morning / Evening toggle */}
+        <div style={{ marginLeft: hideHeader ? 0 : undefined, flex: hideHeader ? 1 : undefined, display: 'flex', justifyContent: hideHeader ? 'flex-start' : undefined }}>
+          <div
+            style={{
+              display: 'flex',
+              borderRadius: 8,
+              overflow: 'hidden',
+              border: '1px solid #E5E7EB',
+            }}
+          >
+            {(['morning', 'evening'] as RoutineMode[]).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setSelectedMode(m)}
+                style={{
+                  fontFamily: 'var(--font-nunito), system-ui',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  padding: '6px 14px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  backgroundColor: selectedMode === m ? '#7B2FBE' : '#F9FAFB',
+                  color: selectedMode === m ? '#FFFFFF' : '#6B7280',
+                  transition: 'background-color 0.15s',
+                  borderRadius: selectedMode === m ? 6 : 0,
+                }}
+              >
+                {m === 'morning' ? '☀️ Morning' : '🌙 Evening'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -347,10 +358,76 @@ export default function RoutineEditor({ childId, onBack }: RoutineEditorProps) {
                 </button>
               </div>
 
-              {/* Icon */}
-              <span style={{ fontSize: 28, width: 36, textAlign: 'center', flexShrink: 0 }}>
-                {task.icon}
-              </span>
+              {/* Icon — tap to edit */}
+              <div style={{ position: 'relative', flexShrink: 0 }} ref={editingIconTaskId === task.id ? iconPickerRef : undefined}>
+                <button
+                  type="button"
+                  onClick={() => setEditingIconTaskId(editingIconTaskId === task.id ? null : task.id)}
+                  aria-label={`Change icon for ${task.label}`}
+                  style={{
+                    fontSize: 24,
+                    width: 36,
+                    height: 36,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: editingIconTaskId === task.id ? '#F3E8FF' : 'none',
+                    border: editingIconTaskId === task.id ? '1px solid #C084FC' : '1px solid transparent',
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                    lineHeight: 1,
+                  }}
+                >
+                  {task.icon}
+                </button>
+                {editingIconTaskId === task.id && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '110%',
+                      left: 0,
+                      backgroundColor: '#FFFFFF',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: 12,
+                      padding: 10,
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(6, 38px)',
+                      gap: 4,
+                      zIndex: 50,
+                      boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
+                      maxHeight: 220,
+                      overflowY: 'auto',
+                      width: 268,
+                    }}
+                  >
+                    {ROUTINE_EMOJIS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => {
+                          updateTaskIcon(childId, selectedMode, task.id, emoji);
+                          setEditingIconTaskId(null);
+                        }}
+                        style={{
+                          width: 38,
+                          height: 38,
+                          fontSize: 20,
+                          background: emoji === task.icon ? '#F3E8FF' : 'none',
+                          border: emoji === task.icon ? '1px solid #C084FC' : '1px solid transparent',
+                          borderRadius: 8,
+                          cursor: 'pointer',
+                          lineHeight: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Label — editable on tap */}
               {isEditingLabel ? (

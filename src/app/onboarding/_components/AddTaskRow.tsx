@@ -1,7 +1,26 @@
 'use client';
 import React, { useState } from 'react';
 
-const QUICK_EMOJIS = ['✨','🎨','📖','🧹','🐕','🌱','🏃','🧺','🎹','🧩','🥗','💊','🚲','🛁','🪴','🎯','📝','💤'];
+const QUICK_EMOJIS = [
+  // Morning & hygiene
+  '☀️','🌅','🛏️','🚿','🛁','🪥','🧼','💊','🧻',
+  // Hair & clothing
+  '🪮','💇','✂️','👕','👗','👖','👟','🧦','🧤','🧢','🎒',
+  // Food & drink
+  '🍽️','🥣','🍳','🥞','🥐','🍎','🍌','🥛','🥤','🧃','☕',
+  // School & learning
+  '🏫','📚','📖','📝','✏️','🖍️','🔬',
+  // Evening & bedtime
+  '🌙','😴','🌟','⭐','💫','🌛',
+  // Activities
+  '🏃','💪','🧘','🚲','⚽','🏊','🎨','🎵','🎸','🤸',
+  // Nature & outdoors
+  '🌿','🌸','🌈','🌤️','☂️',
+  // Pets
+  '🐶','🐱','🐠','🐹',
+  // Misc fun
+  '🦷','👋','🙌','❤️','😊','🎉','🍀','✨','🎯','🧩','🥗','🪴',
+];
 
 interface AddTaskRowProps {
   onAdd: (label: string, icon: string) => void;
@@ -109,16 +128,18 @@ export function AddTaskRow({ onAdd, maxReached }: AddTaskRowProps) {
         <div style={{
           position: 'absolute',
           right: 0,
-          top: 44,
-          zIndex: 10,
+          bottom: '110%',
+          zIndex: 50,
           backgroundColor: '#fff',
-          borderRadius: 16,
-          padding: 12,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+          borderRadius: 12,
+          padding: 10,
+          boxShadow: '0 -4px 24px rgba(0,0,0,0.15)',
           display: 'grid',
-          gridTemplateColumns: 'repeat(6, 1fr)',
+          gridTemplateColumns: 'repeat(7, 36px)',
           gap: 4,
-          width: 210,
+          width: 'max-content',
+          maxHeight: 220,
+          overflowY: 'auto',
         }}>
           {QUICK_EMOJIS.map((e) => (
             <button
@@ -126,8 +147,8 @@ export function AddTaskRow({ onAdd, maxReached }: AddTaskRowProps) {
               type="button"
               onMouseDown={(ev) => { ev.preventDefault(); setIcon(e); setShowEmoji(false); }}
               style={{
-                width: 32, height: 32, borderRadius: 8, border: 'none',
-                backgroundColor: e === icon ? 'var(--color-bg)' : 'transparent',
+                width: 36, height: 36, borderRadius: 8, border: 'none',
+                backgroundColor: e === icon ? '#F3E8FF' : 'transparent',
                 fontSize: 18, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
