@@ -33,6 +33,7 @@ export default function OnboardingPage() {
   // Seed task selections whenever the user enters Step 3
   useEffect(() => {
     if (step === 3) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding defaults on step entry is intentional
       setSelectedMorning(
         new Set(makeMorningTasksForOnboarding(firstBand).map((t) => t.label))
       );
@@ -123,7 +124,7 @@ export default function OnboardingPage() {
       });
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem('unicorn-sparkles-onboarding', JSON.stringify({ children }));
+      localStorage.setItem('ready-set-go-onboarding', JSON.stringify({ children }));
     }
 
     setChildren(children);

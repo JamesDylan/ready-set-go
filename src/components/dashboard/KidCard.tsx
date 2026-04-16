@@ -1,11 +1,19 @@
 'use client';
 import { memo, useEffect, useRef, useState } from 'react';
+import confetti from 'canvas-confetti';
+import { TASK_ICON_MAP } from '@/lib/taskIcons';
 import type { Child, RoutineMode } from '@/types';
 import CharacterAvatar from '@/components/shared/CharacterAvatar';
 import ProgressRing from '@/components/routine/ProgressRing';
 import CelebrationOverlay from '@/components/routine/CelebrationOverlay';
 import { useAppStore } from '@/store/useAppStore';
 import { playSound } from '@/lib/playSound';
+
+const kidConfettiColors: Record<string, string[]> = {
+  griff:   ['#1E40AF', '#3B82F6', '#93C5FD', '#F59E0B'],
+  harriet: ['#BE185D', '#EC4899', '#F9A8D4', '#F59E0B'],
+  evie:    ['#065F46', '#10B981', '#6EE7B7', '#F97316'],
+};
 
 interface KidCardProps {
   child: Child;
@@ -17,6 +25,7 @@ function KidCard({ child, mode }: KidCardProps) {
   const [showCelebration, setShowCelebration] = useState(false);
   const [completedThisSession, setCompletedThisSession] = useState(false);
   const [undoHintTaskId, setUndoHintTaskId] = useState<string | null>(null);
+  const lastToggleRef = useRef<number>(0);
 
   const tasks = mode === 'morning' ? child.morningTasks : child.eveningTasks;
   const completed = tasks.filter((t) => t.isComplete).length;
@@ -45,14 +54,32 @@ function KidCard({ child, mode }: KidCardProps) {
   const accentColor = `var(--color-${child.colour})`;
   const sortedTasks = [...tasks].sort((a, b) => a.order - b.order);
 
-  function handleTaskTap(taskId: string, wasComplete: boolean) {
+  function handleTaskTap(event: React.MouseEvent<HTMLButtonElement>, taskId: string, wasComplete: boolean) {
+    // Debounce: ignore taps within 500ms of last toggle to prevent double-tap accidents
+    // eslint-disable-next-line react-hooks/purity -- event handler, not render
+    const now = Date.now();
+    if (now - lastToggleRef.current < 500) return;
+    lastToggleRef.current = now;
+
     if (wasComplete) {
       // Show a brief hint so un-checking feels intentional
       setUndoHintTaskId(taskId);
       setTimeout(() => setUndoHintTaskId(null), 1000);
     } else {
-      // Only play the sound when completing a task, not when un-checking
+      // Play sound and fire a mini confetti burst from the tapped card
       playSound('/sounds/item-completed.mp3', 0.7);
+      const rect = event.currentTarget.getBoundingClientRect();
+      const x = (rect.left + rect.width / 2) / window.innerWidth;
+      const y = (rect.top + rect.height / 2) / window.innerHeight;
+      confetti({
+        particleCount: 18,
+        spread: 55,
+        startVelocity: 22,
+        colors: kidConfettiColors[child.colour] ?? ['#7B2FBE', '#C084FC', '#F59E0B'],
+        origin: { x, y },
+        scalar: 0.85,
+        gravity: 1.3,
+      });
     }
     toggleTask(child.id, taskId);
   }
@@ -69,17 +96,18 @@ function KidCard({ child, mode }: KidCardProps) {
     <div
       className="flex flex-col rounded-3xl overflow-hidden"
       style={{
-        backgroundColor: 'var(--color-surface)',
+        backgroundColor: allDone
+          ? `color-mix(in srgb, ${accentColor} 6%, var(--color-surface))`
+          : 'var(--color-surface)',
+        border: `3px solid ${accentColor}`,
+        backgroundImage: `linear-gradient(180deg, color-mix(in srgb, ${accentColor} 18%, transparent) 0%, transparent 56px)`,
         boxShadow: allDone
-          ? `0 4px 20px color-mix(in srgb, ${accentColor} 40%, transparent)`
-          : '0 2px 12px rgba(0,0,0,0.08)',
-        borderLeft: `4px solid ${accentColor}`,
+          ? `0 4px 0px rgba(0,0,0,0.12), 0 8px 28px color-mix(in srgb, ${accentColor} 30%, transparent)`
+          : '0 4px 0px rgba(0,0,0,0.12), 0 8px 20px rgba(0,0,0,0.08)',
         flex: 1,
-        transition: 'box-shadow 0.4s ease',
+        transition: 'box-shadow 0.4s ease, background-color 0.4s ease',
       }}
     >
-      {/* Top accent strip */}
-      <div style={{ height: 6, backgroundColor: accentColor, flexShrink: 0 }} />
 
       {/* Kid header */}
       <div
@@ -99,9 +127,10 @@ function KidCard({ child, mode }: KidCardProps) {
           <span
             style={{
               fontFamily: 'var(--font-fredoka-one), system-ui',
-              fontSize: 22,
+              fontSize: 26,
+              fontWeight: 700,
               color: 'var(--color-text)',
-              lineHeight: 1.2,
+              lineHeight: 1.1,
             }}
           >
             {child.name}
@@ -137,7 +166,7 @@ function KidCard({ child, mode }: KidCardProps) {
             fontFamily: 'var(--font-nunito), system-ui',
             fontWeight: 700,
             fontSize: 16,
-            color: allDone ? '#10B981' : accentColor,
+            color: allDone ? 'var(--color-go)' : accentColor,
             flexShrink: 0,
           }}
         >
@@ -153,11 +182,11 @@ function KidCard({ child, mode }: KidCardProps) {
             <button
               key={task.id}
               type="button"
-              onClick={() => handleTaskTap(task.id, task.isComplete)}
+              onClick={(e) => handleTaskTap(e, task.id, task.isComplete)}
               className="flex items-center gap-3 px-4 w-full text-left"
               style={{
                 height: 68,
-                backgroundColor: task.isComplete ? 'color-mix(in srgb, var(--color-success, #10B981) 12%, var(--color-surface, #fff))' : 'transparent',
+                backgroundColor: task.isComplete ? `color-mix(in srgb, var(--color-${child.colour}) 10%, var(--color-surface, #fff))` : 'transparent',
                 border: 'none',
                 borderBottom: isLast ? 'none' : '1px solid color-mix(in srgb, var(--color-text) 10%, transparent)',
                 cursor: 'pointer',
@@ -168,26 +197,41 @@ function KidCard({ child, mode }: KidCardProps) {
               aria-label={`${task.label} — ${task.isComplete ? 'done' : 'tap to complete'}`}
               aria-pressed={task.isComplete}
             >
-              {/* Emoji icon */}
-              <span
-                style={{
-                  fontSize: 36,
-                  lineHeight: 1,
-                  flexShrink: 0,
-                  opacity: task.isComplete ? 0.45 : 1,
-                  transition: 'opacity 0.2s ease',
-                }}
-              >
-                {task.icon}
-              </span>
+              {/* Task icon — Phosphor if mapped, emoji fallback */}
+              {(() => {
+                const PhosphorIcon = TASK_ICON_MAP[task.label];
+                if (PhosphorIcon) {
+                  return (
+                    <PhosphorIcon
+                      size={30}
+                      weight="bold"
+                      color={task.isComplete ? `var(--color-${child.colour})` : 'var(--color-text)'}
+                      style={{ flexShrink: 0, opacity: task.isComplete ? 0.45 : 1, transition: 'opacity 0.2s ease' }}
+                    />
+                  );
+                }
+                return (
+                  <span
+                    style={{
+                      fontSize: 30,
+                      lineHeight: 1,
+                      flexShrink: 0,
+                      opacity: task.isComplete ? 0.45 : 1,
+                      transition: 'opacity 0.2s ease',
+                    }}
+                  >
+                    {task.icon}
+                  </span>
+                );
+              })()}
 
               {/* Task label */}
               <span
                 style={{
                   fontFamily: 'var(--font-nunito), system-ui',
-                  fontWeight: 700,
+                  fontWeight: 600,
                   fontSize: 17,
-                  color: task.isComplete ? 'color-mix(in srgb, var(--color-text) 45%, transparent)' : 'var(--color-text)',
+                  color: task.isComplete ? 'color-mix(in srgb, var(--color-text) 38%, transparent)' : 'var(--color-text)',
                   textDecoration: task.isComplete ? 'line-through' : 'none',
                   flex: 1,
                   transition: 'color 0.2s ease',
@@ -213,20 +257,22 @@ function KidCard({ child, mode }: KidCardProps) {
 
               {/* Completion circle */}
               <div
+                key={task.isComplete ? `${task.id}-done` : `${task.id}-todo`}
+                className={task.isComplete ? 'animate-check-bounce' : ''}
                 style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: '50%',
+                  width: 44,
+                  height: 44,
+                  borderRadius: '14px',
                   flexShrink: 0,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: task.isComplete ? '#10B981' : 'transparent',
-                  border: task.isComplete ? 'none' : `2px solid ${accentColor}`,
+                  backgroundColor: task.isComplete ? accentColor : 'transparent',
+                  border: task.isComplete ? 'none' : `2.5px solid color-mix(in srgb, ${accentColor} 60%, transparent)`,
                   color: '#fff',
-                  fontSize: 16,
-                  fontWeight: 700,
-                  transition: 'background-color 0.2s ease, border 0.2s ease',
+                  fontSize: 22,
+                  fontWeight: 900,
+                  boxShadow: task.isComplete ? `0 2px 10px color-mix(in srgb, ${accentColor} 55%, transparent)` : 'none',
                 }}
               >
                 {task.isComplete ? '✓' : ''}

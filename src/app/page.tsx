@@ -108,20 +108,50 @@ export default function Home() {
         {/* Left: Mode toggle */}
         <ModeToggle currentMode={mode} onToggle={setMode} />
 
-        {/* Centre: Clock (live) */}
-        <time
-          dateTime={now.toISOString()}
+        {/* Centre: Brand + Clock */}
+        <div
           style={{
-            fontFamily: 'var(--font-fredoka-one), system-ui',
-            fontSize: 32,
-            color: 'var(--color-text)',
             position: 'absolute',
             left: '50%',
             transform: 'translateX(-50%)',
+            textAlign: 'center',
+            lineHeight: 1,
           }}
         >
-          {formatTime(now)}
-        </time>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              justifyContent: 'center',
+              marginBottom: 2,
+            }}
+          >
+            <span style={{ fontSize: 22, lineHeight: 1 }}>🏁</span>
+            <span
+              style={{
+                fontFamily: 'var(--font-fredoka-one), system-ui',
+                fontSize: 14,
+                fontWeight: 700,
+                letterSpacing: '0.2em',
+                color: mode === 'morning' ? 'var(--color-ready)' : 'var(--color-brand-light)',
+              }}
+            >
+              READY SET GO
+            </span>
+          </div>
+          <time
+            dateTime={now.toISOString()}
+            style={{
+              fontFamily: 'var(--font-fredoka-one), system-ui',
+              fontSize: 28,
+              color: 'var(--color-text)',
+              display: 'block',
+            }}
+          >
+            {formatTime(now)}
+          </time>
+        </div>
 
         {/* Right: dev Reset + Parent lock */}
         <div className="flex items-center gap-2">

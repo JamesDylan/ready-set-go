@@ -31,8 +31,15 @@ export default function CelebrationOverlay({
       colors,
     };
 
+    // First burst from both sides
     confetti({ ...opts, origin: { x: 0.2, y: 0.8 } });
     confetti({ ...opts, origin: { x: 0.8, y: 0.8 } });
+
+    // Second burst from top after a beat
+    const t = setTimeout(() => {
+      confetti({ ...opts, particleCount: 60, startVelocity: 55, origin: { x: 0.5, y: 0.3 } });
+    }, 500);
+    return () => clearTimeout(t);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -63,6 +70,20 @@ export default function CelebrationOverlay({
       <div className="animate-pop-in">
         <CharacterAvatar avatarType={child.avatarType} size={200} />
       </div>
+
+      <p
+        style={{
+          fontFamily: 'var(--font-fredoka-one), system-ui',
+          fontSize: 32,
+          color: 'var(--color-ready)',
+          margin: 0,
+          lineHeight: 1.1,
+          textAlign: 'center',
+          letterSpacing: '0.08em',
+        }}
+      >
+        READY SET GO! 🏁
+      </p>
 
       <p
         style={{

@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Hook helpers and utility scripts (CommonJS / Node, not app code)
+    ".claude/**",
+    "scripts/**",
   ]),
 ]);
 

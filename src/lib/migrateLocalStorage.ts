@@ -1,8 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Child } from '@/types';
 
-const STORAGE_KEY = 'unicorn-sparkles-v1';
-const MIGRATION_FLAG = 'unicorn-sparkles-migrated';
+const STORAGE_KEY = 'unicorn-sparkles-v1'; // old key — reads existing user data before the rename
+const MIGRATION_FLAG = 'ready-set-go-migrated';
 
 interface PersistedState {
   state: {

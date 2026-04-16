@@ -4,7 +4,7 @@ import '../styles/globals.css';
 import ServiceWorkerRegistration from '@/components/shared/ServiceWorkerRegistration';
 
 const fredoka = Fredoka({
-  weight: ['400', '700'],
+  weight: ['400', '600', '700'],
   subsets: ['latin'],
   variable: '--font-fredoka-one',
   display: 'swap',
@@ -17,13 +17,13 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: 'Unicorn Sparkles',
+  title: 'Ready Set Go',
   description: 'Morning and bedtime routines for kids',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Unicorn Sparkles',
+    title: 'Ready Set Go',
   },
 };
 

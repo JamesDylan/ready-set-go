@@ -24,6 +24,10 @@
   --color-evie-glow: #D1FAE5;
   --color-evie-flame: #F97316;
 
+  /* Ready Set Go brand palette */
+  --color-ready: #F59E0B;
+  --color-go: #16A34A;
+
   /* Rocket — orange */
   --color-rocket: #EA580C;
   --color-rocket-light: #FDBA74;
@@ -38,6 +42,11 @@
   --color-cat: #0D9488;
   --color-cat-light: #99F6E4;
   --color-cat-glow: #CCFBF1;
+}
+
+/* Morning mode — warm cream background to signal "ready" energy */
+[data-mode='morning'] {
+  --color-bg: #FFFBEB;
 }
 
 /* Evening dark mode — applied via data-mode="evening" on root div */

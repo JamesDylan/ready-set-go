@@ -20,7 +20,7 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
           lineHeight: 1.2,
         }}
       >
-        Welcome to Unicorn Sparkles!
+        Welcome to Ready Set Go!
       </h1>
       <p
         style={{

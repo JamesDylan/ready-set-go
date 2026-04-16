@@ -133,7 +133,7 @@ export default function AuthPage() {
           letterSpacing: '0.02em',
         }}
       >
-        Unicorn Sparkles
+        Ready Set Go
       </h1>
 
       <div

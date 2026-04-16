@@ -178,7 +178,7 @@ export const useAppStore = create<AppStore>()(
       }),
     }),
     {
-      name: 'unicorn-sparkles-v1',
+      name: 'ready-set-go-v1',
       partialize: (state) => ({
         children: state.children,
         mode: state.mode,

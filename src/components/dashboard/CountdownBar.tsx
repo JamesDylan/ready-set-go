@@ -24,8 +24,8 @@ export default function CountdownBar({
   // fillPercent = how much of the bar is REMAINING (rocket sits at this point)
   const fillPercent = Math.min(100, Math.max(0, (clampedRemaining / windowMinutes) * 100));
   const trackColour = getTrackColour(minutesRemaining);
-  const modeEmoji = mode === 'morning' ? '🚀' : '🌙';
-  const markerEmoji = mode === 'morning' ? '🚀' : '⭐';
+  const modeEmoji = mode === 'morning' ? '🏎️' : '🌙';
+  const markerEmoji = mode === 'morning' ? '🏎️' : '⭐';
 
   const timeLabel = isLate
     ? `${Math.abs(minutesRemaining)} min late!`
@@ -47,6 +47,7 @@ export default function CountdownBar({
         display: 'flex',
         flexDirection: 'column',
         gap: '6px',
+        flexShrink: 0,
       }}
     >
       {/* Header row */}
@@ -57,17 +58,19 @@ export default function CountdownBar({
           alignItems: 'baseline',
         }}
       >
-        <span
-          style={{
-            fontFamily: "'Nunito', sans-serif",
-            fontWeight: 800,
-            fontSize: '13px',
-            color: 'var(--color-text)',
-            opacity: 0.8,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {modeEmoji} {label}
+        <span style={{ display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: '20px', lineHeight: 1 }}>{modeEmoji}</span>
+          <span
+            style={{
+              fontFamily: "'Nunito', sans-serif",
+              fontWeight: 800,
+              fontSize: '13px',
+              color: 'var(--color-text)',
+              opacity: 0.8,
+            }}
+          >
+            {label}
+          </span>
         </span>
         <span
           style={{
