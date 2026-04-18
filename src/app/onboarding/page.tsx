@@ -118,7 +118,8 @@ export default function OnboardingPage() {
           ],
           morningTarget,
           eveningTarget: s.eveningTarget,
-          streak: 0,
+          morningStreak: 0,
+          eveningStreak: 0,
           avatarConfirmed: false,
         };
       });

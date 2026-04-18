@@ -90,6 +90,7 @@ function KidCard({ child, mode }: KidCardProps) {
       <CelebrationOverlay
         child={child}
         taskCount={total}
+        mode={mode}
         onDismiss={() => setShowCelebration(false)}
       />
     )}
@@ -135,18 +136,23 @@ function KidCard({ child, mode }: KidCardProps) {
           >
             {child.name}
           </span>
-          {child.streak > 0 && (
-            <span
-              style={{
-                fontFamily: 'var(--font-nunito), system-ui',
-                fontWeight: 700,
-                fontSize: 13,
-                color: 'var(--color-gold)',
-              }}
-            >
-              🔥 {child.streak} day streak
-            </span>
-          )}
+          {(() => {
+            const streak = mode === 'morning'
+              ? (child.morningStreak ?? child.streak ?? 0)
+              : (child.eveningStreak ?? child.streak ?? 0);
+            return streak > 0 ? (
+              <span
+                style={{
+                  fontFamily: 'var(--font-nunito), system-ui',
+                  fontWeight: 700,
+                  fontSize: 13,
+                  color: 'var(--color-gold)',
+                }}
+              >
+                🔥 {streak} day streak
+              </span>
+            ) : null;
+          })()}
           {mode === 'evening' && (
             <span style={{
               fontFamily: 'var(--font-nunito), system-ui',

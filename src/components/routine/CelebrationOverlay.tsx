@@ -8,6 +8,7 @@ interface CelebrationOverlayProps {
   child: Child;
   taskCount: number;
   onDismiss: () => void;
+  mode?: 'morning' | 'evening';
 }
 
 const confettiColors: Record<string, string[]> = {
@@ -20,6 +21,7 @@ export default function CelebrationOverlay({
   child,
   taskCount,
   onDismiss,
+  mode = 'morning',
 }: CelebrationOverlayProps) {
   const colors = confettiColors[child.colour] ?? ['#7B2FBE', '#C084FC', '#F59E0B'];
 
@@ -111,20 +113,25 @@ export default function CelebrationOverlay({
         All {taskCount} tasks done!
       </p>
 
-      {child.streak > 0 && (
-        <p
-          style={{
-            fontFamily: 'var(--font-nunito), system-ui',
-            fontWeight: 700,
-            fontSize: 24,
-            color: 'var(--color-gold)',
-            margin: 0,
-            textAlign: 'center',
-          }}
-        >
-          {child.streak} day streak!
-        </p>
-      )}
+      {(() => {
+        const streak = mode === 'morning'
+          ? (child.morningStreak ?? child.streak ?? 0)
+          : (child.eveningStreak ?? child.streak ?? 0);
+        return streak > 0 ? (
+          <p
+            style={{
+              fontFamily: 'var(--font-nunito), system-ui',
+              fontWeight: 700,
+              fontSize: 24,
+              color: 'var(--color-gold)',
+              margin: 0,
+              textAlign: 'center',
+            }}
+          >
+            🔥 {streak} day streak!
+          </p>
+        ) : null;
+      })()}
 
       <p
         className="animate-pulse-soft"

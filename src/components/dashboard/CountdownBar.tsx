@@ -24,7 +24,7 @@ export default function CountdownBar({
   // fillPercent = how much of the bar is REMAINING (rocket sits at this point)
   const fillPercent = Math.min(100, Math.max(0, (clampedRemaining / windowMinutes) * 100));
   const trackColour = getTrackColour(minutesRemaining);
-  const modeEmoji = mode === 'morning' ? '🏎️' : '🌙';
+  const modeEmoji = mode === 'morning' ? '🏁' : '🌙';
   const markerEmoji = mode === 'morning' ? '🏎️' : '⭐';
 
   const timeLabel = isLate

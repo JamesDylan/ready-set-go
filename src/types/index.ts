@@ -19,6 +19,16 @@ export interface Child {
   eveningTasks: Task[];
   morningTarget: string;
   eveningTarget: string;
-  streak: number;
+  morningStreak: number;
+  eveningStreak: number;
+  /** @deprecated use morningStreak / eveningStreak — kept for migration only */
+  streak?: number;
   avatarConfirmed?: boolean;  // undefined = treat as confirmed (backward compat)
+}
+
+export interface StreakSettings {
+  /** If false, completing morning tasks on Sat/Sun does not increment morningStreak */
+  morningCountsWeekends: boolean;
+  /** If false, completing evening tasks on Sat/Sun does not increment eveningStreak */
+  eveningCountsWeekends: boolean;
 }

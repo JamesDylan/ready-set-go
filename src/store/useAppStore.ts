@@ -1,22 +1,31 @@
 'use client';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { getSeedData, getEmptyDayData } from '@/lib/seedData';
-import type { AvatarType, Child, RoutineMode } from '@/types';
+import { getSeedData, getEmptyDayData, makeMorningTasksForOnboarding, makeEveningTasksForOnboarding, getAgeBand } from '@/lib/seedData';
+import type { AvatarType, Child, RoutineMode, StreakSettings } from '@/types';
 import { AVATAR_COLOUR_MAP } from '@/lib/avatarUtils';
+
+function isWeekend(): boolean {
+  const day = new Date().getDay();
+  return day === 0 || day === 6;
+}
 
 interface AppStore {
   children: Child[];
   mode: RoutineMode;
+  streakSettings: StreakSettings;
   setMode: (mode: RoutineMode) => void;
   toggleTask: (childId: string, taskId: string) => void;
   resetDay: () => void;
+  resetStreaks: (childId?: string) => void;
   parentUnlocked: boolean;
   unlockParent: (pin: string) => boolean;
   lockParent: () => void;
   lastResetDate: string;
   checkAndResetIfNewDay: () => void;
   setChildren: (children: Child[]) => void;
+  addChild: (name: string, avatarType: AvatarType, age?: number) => void;
+  removeChild: (childId: string) => void;
   addTask: (childId: string, mode: RoutineMode, label: string, icon: string) => void;
   removeTask: (childId: string, mode: RoutineMode, taskId: string) => void;
   reorderTasks: (childId: string, mode: RoutineMode, taskIds: string[]) => void;
@@ -24,6 +33,7 @@ interface AppStore {
   updateTaskLabel: (childId: string, mode: RoutineMode, taskId: string, newLabel: string) => void;
   updateTaskIcon: (childId: string, mode: RoutineMode, taskId: string, newIcon: string) => void;
   confirmAvatar: (childId: string, avatarType: AvatarType) => void;
+  updateStreakSettings: (settings: Partial<StreakSettings>) => void;
 }
 
 export const useAppStore = create<AppStore>()(
@@ -31,10 +41,20 @@ export const useAppStore = create<AppStore>()(
     (set) => ({
       children: getSeedData(),
       mode: 'morning',
+      streakSettings: {
+        morningCountsWeekends: false,
+        eveningCountsWeekends: true,
+      },
       setMode: (mode) => set({ mode }),
       toggleTask: (childId, taskId) =>
         set((state) => {
           const mode = state.mode;
+          const weekend = isWeekend();
+          const { morningCountsWeekends, eveningCountsWeekends } = state.streakSettings;
+          const streakAllowed = mode === 'morning'
+            ? !weekend || morningCountsWeekends
+            : !weekend || eveningCountsWeekends;
+
           return {
             children: state.children.map((child) => {
               if (child.id !== childId) return child;
@@ -55,13 +75,61 @@ export const useAppStore = create<AppStore>()(
                 ? morningTasks.every((t) => t.isComplete)
                 : eveningTasks.every((t) => t.isComplete);
 
-              const streakIncrement = !wasAllDone && isNowAllDone ? 1 : 0;
+              const streakIncrement = !wasAllDone && isNowAllDone && streakAllowed ? 1 : 0;
 
-              return { ...child, morningTasks, eveningTasks, streak: child.streak + streakIncrement };
+              return {
+                ...child,
+                morningTasks,
+                eveningTasks,
+                morningStreak: mode === 'morning'
+                  ? child.morningStreak + streakIncrement
+                  : child.morningStreak,
+                eveningStreak: mode === 'evening'
+                  ? child.eveningStreak + streakIncrement
+                  : child.eveningStreak,
+              };
             }),
           };
         }),
       setChildren: (children) => set({ children }),
+      addChild: (name, avatarType, age = 8) =>
+        set((state) => {
+          const id = `child-${Date.now()}`;
+          const colour = AVATAR_COLOUR_MAP[avatarType];
+          const ageBand = getAgeBand(age);
+          const morningTasks = makeMorningTasksForOnboarding(ageBand).map((t, i) => ({
+            ...t, id: `${id}-morning-${i}`,
+          }));
+          const eveningTasks = makeEveningTasksForOnboarding(ageBand).map((t, i) => ({
+            ...t, id: `${id}-evening-${i}`,
+          }));
+          const newChild: Child = {
+            id,
+            name,
+            age,
+            avatarType,
+            colour,
+            morningTarget: '08:45',
+            eveningTarget: '20:00',
+            morningStreak: 0,
+            eveningStreak: 0,
+            morningTasks,
+            eveningTasks,
+            avatarConfirmed: true,
+          };
+          return { children: [...state.children, newChild] };
+        }),
+      removeChild: (childId) =>
+        set((state) => ({
+          children: state.children.filter((c) => c.id !== childId),
+        })),
+      resetStreaks: (childId) =>
+        set((state) => ({
+          children: state.children.map((child) => {
+            if (childId && child.id !== childId) return child;
+            return { ...child, morningStreak: 0, eveningStreak: 0 };
+          }),
+        })),
       addTask: (childId, mode, label, icon) =>
         set((state) => ({
           children: state.children.map((child) => {
@@ -153,6 +221,10 @@ export const useAppStore = create<AppStore>()(
                 }
           ),
         })),
+      updateStreakSettings: (settings) =>
+        set((state) => ({
+          streakSettings: { ...state.streakSettings, ...settings },
+        })),
       resetDay: () => set({ children: getEmptyDayData() }),
       parentUnlocked: false,
       unlockParent: (pin) => {
@@ -179,10 +251,27 @@ export const useAppStore = create<AppStore>()(
     }),
     {
       name: 'ready-set-go-v1',
+      version: 2,
+      migrate: (persistedState: unknown, version: number) => {
+        const state = persistedState as Record<string, unknown>;
+        if (version < 2) {
+          // Migrate single streak → morningStreak + eveningStreak
+          const children = state.children as Array<Record<string, unknown>> | undefined;
+          if (Array.isArray(children)) {
+            state.children = children.map((c) => ({
+              ...c,
+              morningStreak: c.morningStreak ?? c.streak ?? 0,
+              eveningStreak: c.eveningStreak ?? c.streak ?? 0,
+            }));
+          }
+        }
+        return state;
+      },
       partialize: (state) => ({
         children: state.children,
         mode: state.mode,
         lastResetDate: state.lastResetDate,
+        streakSettings: state.streakSettings,
       }),
     }
   )
