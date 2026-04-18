@@ -12,9 +12,14 @@ interface ParentPanelProps {
   onClose: () => void;
 }
 
-const COLOUR_MAP: Record<string, string> = {
-  griff: '#1E40AF', harriet: '#BE185D', evie: '#065F46',
-  rocket: '#EA580C', dragon: '#B91C1C', cat: '#0D9488',
+// Keyed by avatarType — works for seed children and dynamically added children
+const AVATAR_HEX: Record<string, string> = {
+  car:     '#1E40AF',
+  unicorn: '#BE185D',
+  axolotl: '#065F46',
+  rocket:  '#EA580C',
+  dragon:  '#B91C1C',
+  cat:     '#0D9488',
 };
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
@@ -282,7 +287,7 @@ export default function ParentPanel({ onClose }: ParentPanelProps) {
               <SectionHeading>Kids</SectionHeading>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 8 }}>
                 {children.map((child) => {
-                  const accentHex = COLOUR_MAP[child.colour] ?? '#7B2FBE';
+                  const accentHex = AVATAR_HEX[child.avatarType] ?? '#7B2FBE';
                   const isConfirmingRemove = removeConfirmId === child.id;
                   return (
                     <div

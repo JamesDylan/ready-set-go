@@ -66,9 +66,27 @@ export default function Home() {
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
   if (mode === 'morning') {
-    countdownTarget = children[0]?.morningTarget ?? '08:45';
-    countdownLabel = 'School ready by';
-    minutesRemaining = minutesUntil(countdownTarget, nowMinutes);
+    // Find child with the nearest (soonest) morning target that hasn't passed
+    const upcomingMorning = children
+      .map((child) => ({
+        name: child.name,
+        target: child.morningTarget,
+        minsLeft: minutesUntil(child.morningTarget, nowMinutes),
+      }))
+      .filter((c) => c.minsLeft > 0)
+      .sort((a, b) => a.minsLeft - b.minsLeft);
+
+    if (upcomingMorning.length > 0) {
+      const next = upcomingMorning[0];
+      countdownTarget = next.target;
+      countdownLabel = children.length > 1 ? `${next.name} — School ready by` : 'School ready by';
+      minutesRemaining = next.minsLeft;
+    } else {
+      // All targets passed — show first child as late
+      countdownTarget = children[0]?.morningTarget ?? '08:45';
+      countdownLabel = 'School ready by';
+      minutesRemaining = minutesUntil(countdownTarget, nowMinutes);
+    }
   } else {
     // Find the child with the earliest bedtime that hasn't been passed yet
     const upcoming = children

@@ -1,7 +1,7 @@
 'use client';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { getSeedData, getEmptyDayData, makeMorningTasksForOnboarding, makeEveningTasksForOnboarding, getAgeBand } from '@/lib/seedData';
+import { getSeedData, makeMorningTasksForOnboarding, makeEveningTasksForOnboarding, getAgeBand } from '@/lib/seedData';
 import type { AvatarType, Child, RoutineMode, StreakSettings } from '@/types';
 import { AVATAR_COLOUR_MAP } from '@/lib/avatarUtils';
 
@@ -225,7 +225,13 @@ export const useAppStore = create<AppStore>()(
         set((state) => ({
           streakSettings: { ...state.streakSettings, ...settings },
         })),
-      resetDay: () => set({ children: getEmptyDayData() }),
+      resetDay: () => set((state) => ({
+        children: state.children.map((child) => ({
+          ...child,
+          morningTasks: child.morningTasks.map((t) => ({ ...t, isComplete: false })),
+          eveningTasks: child.eveningTasks.map((t) => ({ ...t, isComplete: false })),
+        })),
+      })),
       parentUnlocked: false,
       unlockParent: (pin) => {
         if (pin === '1234') {

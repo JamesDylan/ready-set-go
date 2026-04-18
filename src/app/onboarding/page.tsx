@@ -124,10 +124,6 @@ export default function OnboardingPage() {
         };
       });
 
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('ready-set-go-onboarding', JSON.stringify({ children }));
-    }
-
     setChildren(children);
     router.push('/');
   }
