@@ -1,8 +1,9 @@
 'use client';
 import React, { useState } from 'react';
 import type { AvatarType } from '@/types';
-import { AVATAR_EMOJIS } from '@/lib/avatarUtils';
 import { StepDots, PrimaryButton } from './shared';
+import CharacterAvatar from '@/components/shared/CharacterAvatar';
+import { TASK_ICON_MAP } from '@/lib/taskIcons';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -11,8 +12,7 @@ import { StepDots, PrimaryButton } from './shared';
 export interface StepAllSetProps {
   firstName: string;
   firstAvatar: AvatarType;
-  firstTaskLabel: string;
-  firstTaskIcon: string;
+  morningTasks: { label: string; icon: string }[];
   onFinish: () => void;
   onBack: () => void;
 }
@@ -24,16 +24,24 @@ export interface StepAllSetProps {
 export function StepAllSet({
   firstName,
   firstAvatar,
-  firstTaskLabel,
-  firstTaskIcon,
+  morningTasks,
   onFinish,
   onBack,
 }: StepAllSetProps) {
-  const [previewChecked, setPreviewChecked] = useState(false);
+  const [checkedIndices, setCheckedIndices] = useState<Set<number>>(new Set());
 
-  const cta = firstName ? `Hand it to ${firstName} →` : "Let's go →";
+  const cta = firstName ? `Let's go, ${firstName}! →` : "Let's go →";
+  const displayTasks = morningTasks.length > 0
+    ? morningTasks.slice(0, 4)
+    : [{ label: 'Make Bed', icon: '🛏️' }];
 
-  const avatarEmoji = AVATAR_EMOJIS[firstAvatar];
+  function toggleCheck(i: number) {
+    setCheckedIndices((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i); else next.add(i);
+      return next;
+    });
+  }
 
   return (
     <div style={{ textAlign: 'center' }}>
@@ -78,7 +86,7 @@ export function StepAllSet({
             marginBottom: 16,
           }}
         >
-          <span style={{ fontSize: 36 }}>{avatarEmoji}</span>
+          <CharacterAvatar avatarType={firstAvatar} size={40} />
           <span
             style={{
               fontFamily: 'var(--font-fredoka-one), system-ui',
@@ -90,48 +98,63 @@ export function StepAllSet({
           </span>
         </div>
 
-        {/* Tappable task row */}
-        <div
-          onClick={() => setPreviewChecked((prev) => !prev)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            cursor: 'pointer',
-            padding: '8px 4px',
-            borderRadius: 8,
-          }}
-        >
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: '50%',
-              border: previewChecked ? 'none' : '2px solid #DDD6FE',
-              backgroundColor: previewChecked ? '#22c55e' : 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              transition: 'background-color 0.15s ease',
-            }}
-          >
-            {previewChecked ? (
-              <span style={{ color: '#fff', fontSize: 16, fontWeight: 700, lineHeight: 1 }}>✓</span>
-            ) : null}
-          </div>
-          <span style={{ fontSize: 22 }}>{firstTaskIcon}</span>
-          <span
-            style={{
-              fontFamily: 'var(--font-nunito), system-ui',
-              fontWeight: 600,
-              fontSize: 16,
-              color: 'var(--color-text)',
-            }}
-          >
-            {firstTaskLabel}
-          </span>
-        </div>
+        {/* Tappable task rows */}
+        {displayTasks.map((task, i) => {
+          const PhosphorIcon = TASK_ICON_MAP[task.label];
+          const isChecked = checkedIndices.has(i);
+          return (
+            <div
+              key={task.label}
+              onClick={() => toggleCheck(i)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                cursor: 'pointer',
+                padding: '8px 4px',
+                borderRadius: 8,
+              }}
+            >
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  border: isChecked ? 'none' : '2px solid #DDD6FE',
+                  backgroundColor: isChecked ? '#22c55e' : 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  transition: 'background-color 0.15s ease',
+                }}
+              >
+                {isChecked && (
+                  <span style={{ color: '#fff', fontSize: 16, fontWeight: 700, lineHeight: 1 }}>✓</span>
+                )}
+              </div>
+              {PhosphorIcon ? (
+                <PhosphorIcon
+                  size={22}
+                  weight="bold"
+                  style={{ color: 'var(--color-brand)', flexShrink: 0 }}
+                />
+              ) : (
+                <span style={{ fontSize: 22, flexShrink: 0 }}>{task.icon}</span>
+              )}
+              <span
+                style={{
+                  fontFamily: 'var(--font-nunito), system-ui',
+                  fontWeight: 600,
+                  fontSize: 16,
+                  color: 'var(--color-text)',
+                }}
+              >
+                {task.label}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       {/* Card label */}
@@ -145,7 +168,7 @@ export function StepAllSet({
           margin: '0 0 20px',
         }}
       >
-        This is exactly what {firstName || 'your child'} will see each morning. Give it a try.
+        Here&apos;s a taste of {firstName ? `${firstName}'s` : "your child's"} morning routine. Give it a try!
       </p>
 
       {/* Handoff prompt */}
@@ -178,7 +201,7 @@ export function StepAllSet({
             opacity: 0.65,
             margin: 0,
           }}>
-            {firstName ? `${firstName} will get to pick their own avatar first.` : 'They\'ll get to pick their own avatar first.'}
+            Tap each task to tick it off. Streaks build day by day!
           </p>
         </div>
       </div>

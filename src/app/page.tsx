@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import ModeToggle from '@/components/dashboard/ModeToggle';
 import KidCard from '@/components/dashboard/KidCard';
 import CountdownBar from '@/components/dashboard/CountdownBar';
@@ -33,6 +34,8 @@ export default function Home() {
   const unlockParent = useAppStore((s) => s.unlockParent);
   const lockParent = useAppStore((s) => s.lockParent);
   const confirmAvatar = useAppStore((s) => s.confirmAvatar);
+  const onboardingComplete = useAppStore((s) => s.onboardingComplete);
+  const router = useRouter();
 
   const pendingAvatarChild = children.find((c) => c.avatarConfirmed === false) ?? null;
 
@@ -57,6 +60,15 @@ export default function Home() {
   useEffect(() => {
     checkAndResetIfNewDay();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Redirect to onboarding if not completed
+  useEffect(() => {
+    if (!onboardingComplete) {
+      router.replace('/onboarding');
+    }
+  }, [onboardingComplete, router]);
+
+  if (!onboardingComplete) return null;
 
   // Compute countdown bar props
   let countdownTarget: string | null = null;

@@ -15,6 +15,7 @@ import { StepAllSet } from './_components/StepAllSet';
 export default function OnboardingPage() {
   const router = useRouter();
   const setChildren = useAppStore((s) => s.setChildren);
+  const setOnboardingComplete = useAppStore((s) => s.setOnboardingComplete);
 
   const [step, setStep] = useState(1);
   const [slots, setSlots] = useState<ChildSlot[]>(() => [emptySlot()]);
@@ -120,17 +121,22 @@ export default function OnboardingPage() {
           eveningTarget: s.eveningTarget,
           morningStreak: 0,
           eveningStreak: 0,
-          avatarConfirmed: false,
+          avatarConfirmed: true,
         };
       });
 
     setChildren(children);
+    setOnboardingComplete(true);
     router.push('/');
   }
 
   // Derive first-child data for StepAllSet preview
   const firstSlot = slots.find((s) => s.name.trim().length > 0) ?? slots[0];
-  const firstMorningTask = makeMorningTasksForOnboarding(firstSlot?.ageBand ?? 'school')[0];
+  const allMorningForBand = makeMorningTasksForOnboarding(firstSlot?.ageBand ?? 'school');
+  const previewMorningTasks = [
+    ...allMorningForBand.filter((t) => selectedMorning.size > 0 ? selectedMorning.has(t.label) : true),
+    ...customMorningTasks.filter((t) => selectedMorning.has(t.label)),
+  ].slice(0, 4);
 
   return (
     <div
@@ -167,6 +173,8 @@ export default function OnboardingPage() {
           <StepChildren
             slots={slots}
             onSlotsChange={setSlots}
+            morningTarget={morningTarget}
+            onMorningTargetChange={setMorningTarget}
             onNext={() => setStep(3)}
             onBack={() => setStep(1)}
           />
@@ -177,8 +185,6 @@ export default function OnboardingPage() {
             selectedEvening={selectedEvening}
             onMorningToggle={handleMorningToggle}
             onEveningToggle={handleEveningToggle}
-            morningTarget={morningTarget}
-            onMorningTargetChange={setMorningTarget}
             onNext={() => setStep(4)}
             onBack={() => setStep(2)}
             slotCount={slots.filter((s) => s.name.trim()).length}
@@ -191,8 +197,7 @@ export default function OnboardingPage() {
           <StepAllSet
             firstName={firstSlot?.name.trim() ?? ''}
             firstAvatar={firstSlot?.avatar ?? 'unicorn'}
-            firstTaskLabel={firstMorningTask?.label ?? 'Make Bed'}
-            firstTaskIcon={firstMorningTask?.icon ?? '🛏️'}
+            morningTasks={previewMorningTasks}
             onFinish={handleFinish}
             onBack={() => setStep(3)}
           />

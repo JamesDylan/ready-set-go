@@ -79,7 +79,6 @@ export function makeMorningTasksForOnboarding(ageBand: AgeBand = 'school'): Task
       { label: 'Get Dressed', icon: '👕' },
       { label: 'Pack Bag', icon: '🎒' },
       { label: 'Make Lunch', icon: '🥪' },
-      { label: 'Check Bag', icon: '🎒' },
       { label: 'Shoes', icon: '👟' },
     ],
   };
@@ -104,7 +103,6 @@ export function makeEveningTasksForOnboarding(ageBand: AgeBand = 'school'): Task
       { label: 'Pyjamas', icon: '🌙' },
       { label: 'Brush Teeth', icon: '🪥' },
       { label: 'Read', icon: '📚' },
-      { label: 'Bedtime', icon: '⭐' },
     ],
     school: [
       { label: 'Eat Dinner', icon: '🍽️' },
@@ -112,7 +110,6 @@ export function makeEveningTasksForOnboarding(ageBand: AgeBand = 'school'): Task
       { label: 'Bath', icon: '🛁' },
       { label: 'Pyjamas', icon: '🌙' },
       { label: 'Read', icon: '📚' },
-      { label: 'Bedtime', icon: '⭐' },
     ],
     independent: [
       { label: 'Eat Dinner', icon: '🍽️' },
@@ -121,7 +118,6 @@ export function makeEveningTasksForOnboarding(ageBand: AgeBand = 'school'): Task
       { label: 'Pyjamas', icon: '🌙' },
       { label: 'Read', icon: '📚' },
       { label: 'Set Alarm', icon: '⏰' },
-      { label: 'Bedtime', icon: '⭐' },
     ],
   };
   return tasksByBand[ageBand].map((t, i) => ({

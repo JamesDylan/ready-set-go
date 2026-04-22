@@ -34,6 +34,8 @@ interface AppStore {
   updateTaskIcon: (childId: string, mode: RoutineMode, taskId: string, newIcon: string) => void;
   confirmAvatar: (childId: string, avatarType: AvatarType) => void;
   updateStreakSettings: (settings: Partial<StreakSettings>) => void;
+  onboardingComplete: boolean;
+  setOnboardingComplete: (v: boolean) => void;
 }
 
 export const useAppStore = create<AppStore>()(
@@ -225,6 +227,8 @@ export const useAppStore = create<AppStore>()(
         set((state) => ({
           streakSettings: { ...state.streakSettings, ...settings },
         })),
+      onboardingComplete: false,
+      setOnboardingComplete: (v) => set({ onboardingComplete: v }),
       resetDay: () => set((state) => ({
         children: state.children.map((child) => ({
           ...child,
@@ -257,7 +261,7 @@ export const useAppStore = create<AppStore>()(
     }),
     {
       name: 'ready-set-go-v1',
-      version: 2,
+      version: 3,
       migrate: (persistedState: unknown, version: number) => {
         const state = persistedState as Record<string, unknown>;
         if (version < 2) {
@@ -271,6 +275,10 @@ export const useAppStore = create<AppStore>()(
             }));
           }
         }
+        if (version < 3) {
+          // Existing users have already onboarded — don't redirect them
+          state.onboardingComplete = true;
+        }
         return state;
       },
       partialize: (state) => ({
@@ -278,6 +286,7 @@ export const useAppStore = create<AppStore>()(
         mode: state.mode,
         lastResetDate: state.lastResetDate,
         streakSettings: state.streakSettings,
+        onboardingComplete: state.onboardingComplete,
       }),
     }
   )

@@ -237,11 +237,13 @@ export function ChildSlotRow({ slot, onChange }: ChildSlotRowProps) {
 interface StepChildrenProps {
   slots: ChildSlot[];
   onSlotsChange: (slots: ChildSlot[]) => void;
+  morningTarget: string;
+  onMorningTargetChange: (v: string) => void;
   onNext: () => void;
   onBack: () => void;
 }
 
-export function StepChildren({ slots, onSlotsChange, onNext, onBack }: StepChildrenProps) {
+export function StepChildren({ slots, onSlotsChange, morningTarget, onMorningTargetChange, onNext, onBack }: StepChildrenProps) {
   const canContinue = slots.some((s) => s.name.trim().length > 0);
 
   function updateSlot(index: number, updated: ChildSlot) {
@@ -311,6 +313,42 @@ export function StepChildren({ slots, onSlotsChange, onNext, onBack }: StepChild
       ) : (
         <div style={{ marginBottom: 20 }} />
       )}
+
+      {/* Shared morning departure time */}
+      <div style={{ marginBottom: 16 }}>
+        <label
+          style={{
+            fontFamily: 'var(--font-nunito), system-ui',
+            fontWeight: 700,
+            fontSize: 13,
+            color: 'var(--color-text)',
+            opacity: 0.7,
+            display: 'block',
+            marginBottom: 6,
+          }}
+        >
+          ⏰ What time do you need to leave for school in the morning? (optional)
+        </label>
+        <input
+          type="time"
+          value={morningTarget}
+          onChange={(e) => onMorningTargetChange(e.target.value)}
+          style={{
+            fontFamily: 'var(--font-nunito), system-ui',
+            fontWeight: 700,
+            fontSize: 18,
+            color: 'var(--color-text)',
+            backgroundColor: 'var(--color-surface)',
+            border: '1.5px solid #DDD6FE',
+            borderRadius: 12,
+            padding: '10px 14px',
+            minHeight: 48,
+            width: '100%',
+            boxSizing: 'border-box' as const,
+            outline: 'none',
+          }}
+        />
+      </div>
 
       <p style={{
         fontFamily: 'var(--font-nunito), system-ui',

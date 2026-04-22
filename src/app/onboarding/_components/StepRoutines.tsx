@@ -4,6 +4,7 @@ import type { AgeBand } from '@/lib/seedData';
 import { makeMorningTasksForOnboarding, makeEveningTasksForOnboarding } from '@/lib/seedData';
 import { StepDots, PrimaryButton } from './shared';
 import { AddTaskRow } from './AddTaskRow';
+import { TASK_ICON_MAP } from '@/lib/taskIcons';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -15,8 +16,6 @@ export interface StepRoutinesProps {
   selectedEvening: Set<string>;
   onMorningToggle: (label: string) => void;
   onEveningToggle: (label: string) => void;
-  morningTarget: string;
-  onMorningTargetChange: (v: string) => void;
   onNext: () => void;
   onBack: () => void;
   slotCount: number;
@@ -38,6 +37,7 @@ interface TaskToggleRowProps {
 }
 
 function TaskToggleRow({ icon, label, checked, onToggle }: TaskToggleRowProps) {
+  const PhosphorIcon = TASK_ICON_MAP[label];
   return (
     <div
       onClick={onToggle}
@@ -71,7 +71,15 @@ function TaskToggleRow({ icon, label, checked, onToggle }: TaskToggleRowProps) {
           <span style={{ color: '#fff', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>✓</span>
         ) : null}
       </div>
-      <span style={{ fontSize: 18, flexShrink: 0 }}>{icon}</span>
+      {PhosphorIcon ? (
+        <PhosphorIcon
+          size={22}
+          weight="bold"
+          style={{ color: 'var(--color-brand)', flexShrink: 0, opacity: checked ? 1 : 0.4 }}
+        />
+      ) : (
+        <span style={{ fontSize: 18, flexShrink: 0, opacity: checked ? 1 : 0.4 }}>{icon}</span>
+      )}
       <span
         style={{
           fontFamily: 'var(--font-nunito), system-ui',
@@ -97,8 +105,6 @@ export function StepRoutines({
   selectedEvening,
   onMorningToggle,
   onEveningToggle,
-  morningTarget,
-  onMorningTargetChange,
   onNext,
   onBack,
   slotCount,
@@ -242,42 +248,6 @@ export function StepRoutines({
             maxReached={customEveningTasks.length >= 3}
           />
         </div>
-      </div>
-
-      {/* Global school-ready time */}
-      <div style={{ marginBottom: 28 }}>
-        <label
-          style={{
-            fontFamily: 'var(--font-nunito), system-ui',
-            fontWeight: 700,
-            fontSize: 13,
-            color: 'var(--color-text)',
-            opacity: 0.7,
-            display: 'block',
-            marginBottom: 6,
-          }}
-        >
-          🏫 Need to leave by (optional)
-        </label>
-        <input
-          type="time"
-          value={morningTarget}
-          onChange={(e) => onMorningTargetChange(e.target.value)}
-          style={{
-            fontFamily: 'var(--font-nunito), system-ui',
-            fontWeight: 700,
-            fontSize: 18,
-            color: 'var(--color-text)',
-            backgroundColor: 'var(--color-surface)',
-            border: '1.5px solid #DDD6FE',
-            borderRadius: 12,
-            padding: '10px 14px',
-            minHeight: 48,
-            width: '100%',
-            boxSizing: 'border-box',
-            outline: 'none',
-          }}
-        />
       </div>
 
       <p style={{
