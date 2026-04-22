@@ -145,7 +145,7 @@ export default function CountdownBar({
             position: 'absolute',
             left: `calc(${fillPercent}% - 16px)`,
             top: '50%',
-            transform: 'translateY(-50%)',
+            transform: mode === 'morning' ? 'translateY(-50%) scaleX(-1)' : 'translateY(-50%)',
             fontSize: '20px',
             lineHeight: 1,
             transition: 'left 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
