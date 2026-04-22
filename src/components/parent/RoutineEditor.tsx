@@ -2,6 +2,8 @@
 import { useState, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import type { RoutineMode } from '@/types';
+import { TASK_ICON_MAP } from '@/lib/taskIcons';
+import CharacterAvatar from '@/components/shared/CharacterAvatar';
 
 interface RoutineEditorProps {
   childId: string;
@@ -34,11 +36,6 @@ const ROUTINE_EMOJIS = [
   '🦷', '👋', '🙌', '🤝', '❤️', '😊', '🎉', '🍀',
 ];
 
-const AVATAR_EMOJIS: Record<string, string> = {
-  car: '🚗',
-  unicorn: '🦄',
-  axolotl: '🦎',
-};
 
 export default function RoutineEditor({ childId, onBack, hideHeader = false }: RoutineEditorProps) {
   const children = useAppStore((s) => s.children);
@@ -128,7 +125,7 @@ export default function RoutineEditor({ childId, onBack, hideHeader = false }: R
     setEditingTimeMode(false);
   };
 
-  const avatarEmoji = AVATAR_EMOJIS[child.avatarType] ?? '👶';
+  // avatarEmoji kept for compatibility but CharacterAvatar used in JSX
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -160,7 +157,7 @@ export default function RoutineEditor({ childId, onBack, hideHeader = false }: R
             >
               ←
             </button>
-            <span style={{ fontSize: 24 }}>{avatarEmoji}</span>
+            <CharacterAvatar avatarType={child.avatarType} size={32} />
             <span
               style={{
                 fontFamily: 'var(--font-fredoka-one), system-ui',
@@ -300,6 +297,7 @@ export default function RoutineEditor({ childId, onBack, hideHeader = false }: R
         {tasks.map((task, index) => {
           const isDeleting = deletingTaskId === task.id;
           const isEditingLabel = editingLabelId === task.id;
+          const TaskPhosphorIcon = TASK_ICON_MAP[task.label];
           return (
             <div
               key={task.id}
@@ -378,7 +376,11 @@ export default function RoutineEditor({ childId, onBack, hideHeader = false }: R
                     lineHeight: 1,
                   }}
                 >
-                  {task.icon}
+                  {TaskPhosphorIcon ? (
+                    <TaskPhosphorIcon size={22} weight="bold" style={{ color: '#7B2FBE' }} />
+                  ) : (
+                    task.icon
+                  )}
                 </button>
                 {editingIconTaskId === task.id && (
                   <div
