@@ -1,26 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-
-const QUICK_EMOJIS = [
-  // Morning & hygiene
-  '☀️','🌅','🛏️','🚿','🛁','🪥','🧼','💊','🧻',
-  // Hair & clothing
-  '🪮','💇','✂️','👕','👗','👖','👟','🧦','🧤','🧢','🎒',
-  // Food & drink
-  '🍽️','🥣','🍳','🥞','🥐','🍎','🍌','🥛','🥤','🧃','☕',
-  // School & learning
-  '🏫','📚','📖','📝','✏️','🖍️','🔬',
-  // Evening & bedtime
-  '🌙','😴','🌟','⭐','💫','🌛',
-  // Activities
-  '🏃','💪','🧘','🚲','⚽','🏊','🎨','🎵','🎸','🤸',
-  // Nature & outdoors
-  '🌿','🌸','🌈','🌤️','☂️',
-  // Pets
-  '🐶','🐱','🐠','🐹',
-  // Misc fun
-  '🦷','👋','🙌','❤️','😊','🎉','🍀','✨','🎯','🧩','🥗','🪴',
-];
+import { ICON_KEY_MAP, ICON_PICKER_LIST } from '@/lib/taskIcons';
 
 interface AddTaskRowProps {
   onAdd: (label: string, icon: string) => void;
@@ -30,20 +10,20 @@ interface AddTaskRowProps {
 export function AddTaskRow({ onAdd, maxReached }: AddTaskRowProps) {
   const [active, setActive] = useState(false);
   const [inputVal, setInputVal] = useState('');
-  const [icon, setIcon] = useState('✨');
-  const [showEmoji, setShowEmoji] = useState(false);
+  const [iconKey, setIconKey] = useState('Star');
+  const [showPicker, setShowPicker] = useState(false);
 
   if (maxReached) return null;
 
   function commit() {
     const trimmed = inputVal.trim();
     if (trimmed.length > 0) {
-      onAdd(trimmed, icon);
+      onAdd(trimmed, iconKey);
       setInputVal('');
-      setIcon('✨');
+      setIconKey('Star');
     }
     setActive(false);
-    setShowEmoji(false);
+    setShowPicker(false);
   }
 
   if (!active) {
@@ -82,6 +62,8 @@ export function AddTaskRow({ onAdd, maxReached }: AddTaskRowProps) {
     );
   }
 
+  const CurrentIcon = ICON_KEY_MAP[iconKey];
+
   return (
     <div style={{ position: 'relative', borderTop: '1px dashed #DDD6FE', paddingTop: 8, marginTop: 4 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -111,20 +93,26 @@ export function AddTaskRow({ onAdd, maxReached }: AddTaskRowProps) {
             minWidth: 0,
           }}
         />
+        {/* Icon picker trigger */}
         <button
           type="button"
-          onMouseDown={(e) => { e.preventDefault(); setShowEmoji((v) => !v); }}
+          onMouseDown={(e) => { e.preventDefault(); setShowPicker((v) => !v); }}
           style={{
             width: 32, height: 32, borderRadius: 8,
             border: '1.5px solid #DDD6FE',
             backgroundColor: 'var(--color-bg)',
-            fontSize: 18, cursor: 'pointer', flexShrink: 0,
+            cursor: 'pointer', flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
-        >{icon}</button>
+          aria-label="Choose icon"
+        >
+          {CurrentIcon
+            ? <CurrentIcon size={18} weight="bold" style={{ color: 'var(--color-brand)' }} />
+            : <span style={{ fontSize: 16 }}>{iconKey}</span>}
+        </button>
       </div>
 
-      {showEmoji && (
+      {showPicker && (
         <div style={{
           position: 'absolute',
           right: 0,
@@ -132,28 +120,35 @@ export function AddTaskRow({ onAdd, maxReached }: AddTaskRowProps) {
           zIndex: 50,
           backgroundColor: '#fff',
           borderRadius: 12,
-          padding: 10,
           boxShadow: '0 -4px 24px rgba(0,0,0,0.15)',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7, 36px)',
-          gap: 4,
-          width: 'max-content',
-          maxHeight: 220,
-          overflowY: 'auto',
+          border: '1px solid #E5E7EB',
+          width: 268,
         }}>
-          {QUICK_EMOJIS.map((e) => (
-            <button
-              key={e}
-              type="button"
-              onMouseDown={(ev) => { ev.preventDefault(); setIcon(e); setShowEmoji(false); }}
-              style={{
-                width: 36, height: 36, borderRadius: 8, border: 'none',
-                backgroundColor: e === icon ? '#F3E8FF' : 'transparent',
-                fontSize: 18, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >{e}</button>
-          ))}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(6, 38px)',
+            gap: 4,
+            padding: 10,
+            maxHeight: 220,
+            overflowY: 'auto',
+          }}>
+            {ICON_PICKER_LIST.map(({ key, Icon }) => (
+              <button
+                key={key}
+                type="button"
+                onMouseDown={(ev) => { ev.preventDefault(); setIconKey(key); setShowPicker(false); }}
+                style={{
+                  width: 38, height: 38, borderRadius: 8,
+                  border: key === iconKey ? '1.5px solid #C084FC' : '1px solid transparent',
+                  backgroundColor: key === iconKey ? '#F3E8FF' : 'transparent',
+                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <Icon size={20} weight="bold" style={{ color: 'var(--color-brand)' }} />
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

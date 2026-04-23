@@ -2,7 +2,7 @@
 import { useState, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import type { RoutineMode } from '@/types';
-import { TASK_ICON_MAP } from '@/lib/taskIcons';
+import { TASK_ICON_MAP, ICON_KEY_MAP, ICON_PICKER_LIST } from '@/lib/taskIcons';
 import CharacterAvatar from '@/components/shared/CharacterAvatar';
 
 interface RoutineEditorProps {
@@ -11,31 +11,55 @@ interface RoutineEditorProps {
   hideHeader?: boolean;
 }
 
-const ROUTINE_EMOJIS = [
-  // Morning & hygiene
-  '☀️', '🌅', '🛏️', '🚿', '🛁', '🪥', '🧼', '🪒', '💊', '🧻',
-  // Hair
-  '🪮', '💇', '💈', '✂️',
-  // Clothing & accessories
-  '👕', '👗', '👖', '👟', '🥿', '🧦', '🧤', '🧢', '🎒', '👜', '👒',
-  // Food & drink
-  '🍽️', '🥣', '🍳', '🥞', '🥐', '🍎', '🍌', '🥛', '🥤', '🧃', '☕', '🫖',
-  // School & learning
-  '🏫', '📚', '📖', '📝', '✏️', '🖍️', '📐', '🔬',
-  // Evening & bedtime
-  '🌙', '😴', '🌟', '⭐', '💫', '🌛',
-  // Activities & exercise
-  '🏃', '💪', '🧘', '🚲', '⚽', '🏊', '🎨', '🎵', '🎸', '🤸',
-  // Outdoors & nature
-  '🌿', '🌸', '🌈', '🌤️', '☂️', '🧴',
-  // Pets
-  '🐶', '🐱', '🐠', '🐹',
-  // Tech & devices
-  '📱', '💻', '🎮', '📺',
-  // Misc fun
-  '🦷', '👋', '🙌', '🤝', '❤️', '😊', '🎉', '🍀',
-];
+/** Renders whichever icon is appropriate for a task — label map → key map → emoji */
+function TaskIcon({ label, icon, size = 22, color = '#7B2FBE' }: { label: string; icon: string; size?: number; color?: string }) {
+  const Phosphor = TASK_ICON_MAP[label] ?? ICON_KEY_MAP[icon];
+  if (Phosphor) return <Phosphor size={size} weight="bold" style={{ color, flexShrink: 0 }} />;
+  return <span style={{ fontSize: size, lineHeight: 1, flexShrink: 0 }}>{icon}</span>;
+}
 
+/** Icon picker grid — shows full ICON_PICKER_LIST as Phosphor buttons */
+function IconPickerGrid({
+  currentKey,
+  onSelect,
+}: {
+  currentKey: string;
+  onSelect: (key: string) => void;
+}) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(6, 38px)',
+        gap: 4,
+        maxHeight: 240,
+        overflowY: 'auto',
+        padding: 10,
+      }}
+    >
+      {ICON_PICKER_LIST.map(({ key, Icon }) => (
+        <button
+          key={key}
+          type="button"
+          onClick={() => onSelect(key)}
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 8,
+            border: key === currentKey ? '1.5px solid #C084FC' : '1px solid transparent',
+            backgroundColor: key === currentKey ? '#F3E8FF' : 'transparent',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon size={20} weight="bold" style={{ color: '#7B2FBE' }} />
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function RoutineEditor({ childId, onBack, hideHeader = false }: RoutineEditorProps) {
   const children = useAppStore((s) => s.children);
@@ -50,8 +74,8 @@ export default function RoutineEditor({ childId, onBack, hideHeader = false }: R
 
   const [selectedMode, setSelectedMode] = useState<RoutineMode>('morning');
   const [newTaskLabel, setNewTaskLabel] = useState('');
-  const [newTaskEmoji, setNewTaskEmoji] = useState('⭐');
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [newTaskIconKey, setNewTaskIconKey] = useState('Star');
+  const [showIconPicker, setShowIconPicker] = useState(false);
   const [editingTimeMode, setEditingTimeMode] = useState(false);
   const [pendingTime, setPendingTime] = useState('');
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
@@ -59,7 +83,6 @@ export default function RoutineEditor({ childId, onBack, hideHeader = false }: R
   const [editingLabelValue, setEditingLabelValue] = useState('');
   const [editingIconTaskId, setEditingIconTaskId] = useState<string | null>(null);
 
-  const emojiPickerRef = useRef<HTMLDivElement>(null);
   const iconPickerRef = useRef<HTMLDivElement>(null);
 
   if (!child) return null;
@@ -70,9 +93,9 @@ export default function RoutineEditor({ childId, onBack, hideHeader = false }: R
   const handleAddTask = () => {
     const trimmed = newTaskLabel.trim();
     if (!trimmed) return;
-    addTask(childId, selectedMode, trimmed, newTaskEmoji);
+    addTask(childId, selectedMode, trimmed, newTaskIconKey);
     setNewTaskLabel('');
-    setNewTaskEmoji('⭐');
+    setNewTaskIconKey('Star');
   };
 
   const handleDeleteTask = (taskId: string) => {
@@ -124,8 +147,6 @@ export default function RoutineEditor({ childId, onBack, hideHeader = false }: R
     }
     setEditingTimeMode(false);
   };
-
-  // avatarEmoji kept for compatibility but CharacterAvatar used in JSX
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -297,7 +318,6 @@ export default function RoutineEditor({ childId, onBack, hideHeader = false }: R
         {tasks.map((task, index) => {
           const isDeleting = deletingTaskId === task.id;
           const isEditingLabel = editingLabelId === task.id;
-          const TaskPhosphorIcon = TASK_ICON_MAP[task.label];
           return (
             <div
               key={task.id}
@@ -356,14 +376,13 @@ export default function RoutineEditor({ childId, onBack, hideHeader = false }: R
                 </button>
               </div>
 
-              {/* Icon — tap to edit */}
+              {/* Icon — tap to open picker */}
               <div style={{ position: 'relative', flexShrink: 0 }} ref={editingIconTaskId === task.id ? iconPickerRef : undefined}>
                 <button
                   type="button"
                   onClick={() => setEditingIconTaskId(editingIconTaskId === task.id ? null : task.id)}
                   aria-label={`Change icon for ${task.label}`}
                   style={{
-                    fontSize: 24,
                     width: 36,
                     height: 36,
                     display: 'flex',
@@ -373,14 +392,9 @@ export default function RoutineEditor({ childId, onBack, hideHeader = false }: R
                     border: editingIconTaskId === task.id ? '1px solid #C084FC' : '1px solid transparent',
                     borderRadius: 8,
                     cursor: 'pointer',
-                    lineHeight: 1,
                   }}
                 >
-                  {TaskPhosphorIcon ? (
-                    <TaskPhosphorIcon size={22} weight="bold" style={{ color: '#7B2FBE' }} />
-                  ) : (
-                    task.icon
-                  )}
+                  <TaskIcon label={task.label} icon={task.icon} size={22} />
                 </button>
                 {editingIconTaskId === task.id && (
                   <div
@@ -391,42 +405,18 @@ export default function RoutineEditor({ childId, onBack, hideHeader = false }: R
                       backgroundColor: '#FFFFFF',
                       border: '1px solid #E5E7EB',
                       borderRadius: 12,
-                      padding: 10,
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(6, 38px)',
-                      gap: 4,
                       zIndex: 50,
                       boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
-                      maxHeight: 220,
-                      overflowY: 'auto',
                       width: 268,
                     }}
                   >
-                    {ROUTINE_EMOJIS.map((emoji) => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        onClick={() => {
-                          updateTaskIcon(childId, selectedMode, task.id, emoji);
-                          setEditingIconTaskId(null);
-                        }}
-                        style={{
-                          width: 38,
-                          height: 38,
-                          fontSize: 20,
-                          background: emoji === task.icon ? '#F3E8FF' : 'none',
-                          border: emoji === task.icon ? '1px solid #C084FC' : '1px solid transparent',
-                          borderRadius: 8,
-                          cursor: 'pointer',
-                          lineHeight: 1,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
+                    <IconPickerGrid
+                      currentKey={task.icon}
+                      onSelect={(key) => {
+                        updateTaskIcon(childId, selectedMode, task.id, key);
+                        setEditingIconTaskId(null);
+                      }}
+                    />
                   </div>
                 )}
               </div>
@@ -514,25 +504,33 @@ export default function RoutineEditor({ childId, onBack, hideHeader = false }: R
           position: 'relative',
         }}
       >
-        {/* Emoji picker button */}
-        <div style={{ position: 'relative' }} ref={emojiPickerRef}>
+        {/* Icon picker button */}
+        <div style={{ position: 'relative' }}>
           <button
             type="button"
-            onClick={() => setShowEmojiPicker((p) => !p)}
+            onClick={() => setShowIconPicker((p) => !p)}
             style={{
-              fontSize: 24,
+              width: 40,
+              height: 40,
               background: '#FFFFFF',
               border: '1px solid #D1D5DB',
               borderRadius: 10,
-              padding: '4px 8px',
+              padding: 0,
               cursor: 'pointer',
-              lineHeight: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
-            aria-label="Choose emoji"
+            aria-label="Choose icon"
           >
-            {newTaskEmoji}
+            {(() => {
+              const Icon = ICON_KEY_MAP[newTaskIconKey];
+              return Icon
+                ? <Icon size={22} weight="bold" style={{ color: '#7B2FBE' }} />
+                : <span style={{ fontSize: 20 }}>{newTaskIconKey}</span>;
+            })()}
           </button>
-          {showEmojiPicker && (
+          {showIconPicker && (
             <div
               style={{
                 position: 'absolute',
@@ -541,39 +539,15 @@ export default function RoutineEditor({ childId, onBack, hideHeader = false }: R
                 backgroundColor: '#FFFFFF',
                 border: '1px solid #E5E7EB',
                 borderRadius: 14,
-                padding: 10,
-                display: 'grid',
-                gridTemplateColumns: 'repeat(6, 38px)',
-                gap: 4,
                 zIndex: 50,
                 boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
-                maxHeight: 240,
-                overflowY: 'auto',
                 width: 268,
               }}
             >
-              {ROUTINE_EMOJIS.map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={() => { setNewTaskEmoji(emoji); setShowEmojiPicker(false); }}
-                  style={{
-                    width: 38,
-                    height: 38,
-                    fontSize: 20,
-                    background: emoji === newTaskEmoji ? '#F3E8FF' : 'none',
-                    border: emoji === newTaskEmoji ? '1px solid #C084FC' : '1px solid transparent',
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                    lineHeight: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {emoji}
-                </button>
-              ))}
+              <IconPickerGrid
+                currentKey={newTaskIconKey}
+                onSelect={(key) => { setNewTaskIconKey(key); setShowIconPicker(false); }}
+              />
             </div>
           )}
         </div>

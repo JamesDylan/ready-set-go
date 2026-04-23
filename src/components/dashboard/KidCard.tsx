@@ -1,7 +1,7 @@
 'use client';
 import { memo, useEffect, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
-import { TASK_ICON_MAP } from '@/lib/taskIcons';
+import { TASK_ICON_MAP, ICON_KEY_MAP } from '@/lib/taskIcons';
 import type { Child, RoutineMode } from '@/types';
 import CharacterAvatar from '@/components/shared/CharacterAvatar';
 import ProgressRing from '@/components/routine/ProgressRing';
@@ -203,9 +203,9 @@ function KidCard({ child, mode }: KidCardProps) {
               aria-label={`${task.label} — ${task.isComplete ? 'done' : 'tap to complete'}`}
               aria-pressed={task.isComplete}
             >
-              {/* Task icon — Phosphor if mapped, emoji fallback */}
+              {/* Task icon — label map → key map → emoji fallback */}
               {(() => {
-                const PhosphorIcon = TASK_ICON_MAP[task.label];
+                const PhosphorIcon = TASK_ICON_MAP[task.label] ?? ICON_KEY_MAP[task.icon];
                 if (PhosphorIcon) {
                   return (
                     <PhosphorIcon
