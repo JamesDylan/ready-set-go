@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import ModeToggle from '@/components/dashboard/ModeToggle';
 import KidCard from '@/components/dashboard/KidCard';
 import CountdownBar from '@/components/dashboard/CountdownBar';
@@ -35,12 +36,14 @@ export default function Home() {
   const lockParent = useAppStore((s) => s.lockParent);
   const confirmAvatar = useAppStore((s) => s.confirmAvatar);
   const onboardingComplete = useAppStore((s) => s.onboardingComplete);
+  const setOnboardingComplete = useAppStore((s) => s.setOnboardingComplete);
   const router = useRouter();
 
   const pendingAvatarChild = children.find((c) => c.avatarConfirmed === false) ?? null;
 
   const [now, setNow] = useState<Date>(() => new Date());
   const [showPINGate, setShowPINGate] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
 
   // Live clock: tick every 60 seconds
   useEffect(() => {
@@ -61,14 +64,31 @@ export default function Home() {
     checkAndResetIfNewDay();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Redirect to onboarding if not completed
+  // Verify onboarding status — if not locally complete, check Supabase before redirecting.
+  // This handles authenticated users on a new device whose localStorage was wiped.
   useEffect(() => {
-    if (!onboardingComplete) {
-      router.replace('/onboarding');
+    if (onboardingComplete) {
+      setOnboardingChecked(true);
+      return;
     }
-  }, [onboardingComplete, router]);
+    let cancelled = false;
+    createClient()
+      .from('families')
+      .select('id')
+      .limit(1)
+      .then(({ data }) => {
+        if (cancelled) return;
+        if (data && data.length > 0) {
+          setOnboardingComplete(true);
+          setOnboardingChecked(true);
+        } else {
+          router.replace('/onboarding');
+        }
+      });
+    return () => { cancelled = true; };
+  }, [onboardingComplete, router, setOnboardingComplete]);
 
-  if (!onboardingComplete) return null;
+  if (!onboardingChecked) return null;
 
   // Compute countdown bar props
   let countdownTarget: string | null = null;

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { useAppStore } from '@/store/useAppStore';
 
 type Tab = 'signin' | 'signup';
 
@@ -35,6 +36,7 @@ function getFriendlyError(msg: string): string {
 
 export default function AuthPage() {
   const router = useRouter();
+  const setOnboardingComplete = useAppStore((s) => s.setOnboardingComplete);
   const [tab, setTab] = useState<Tab>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -56,12 +58,18 @@ export default function AuthPage() {
     setLoading(true);
     const supabase = createClient();
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
     if (signInError) {
+      setLoading(false);
       setError(getFriendlyError(signInError.message));
-    } else {
-      router.push('/');
+      return;
     }
+    // If the user has a family they've previously onboarded — skip onboarding
+    const { data: families } = await supabase.from('families').select('id').limit(1);
+    if (families && families.length > 0) {
+      setOnboardingComplete(true);
+    }
+    setLoading(false);
+    router.push('/');
   }
 
   async function handleSignUp(e: React.FormEvent) {
